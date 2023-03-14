@@ -1,0 +1,15 @@
+{'mumble-03': {
+        5000: {'mumble-05': {'5000': {'next_hop_host_name': 'mumble-05', 'next_hop_port_number': '5000', 'delay_in_milliseconds': '3000', 'loss_probability_percentage': '0'
+                }
+            }, 'mumble-06': {'5000': {'next_hop_host_name': 'mumble-04', 'next_hop_port_number': '5000', 'delay_in_milliseconds': '0', 'loss_probability_percentage': '20'
+                }, '4000': {'next_hop_host_name': 'mumble-04', 'next_hop_port_number': '5000', 'delay_in_milliseconds': '0', 'loss_probability_percentage': '20'
+                }
+            }
+        }
+    }, 'mumble-04': {
+        5000: {'mumble-06': {'5000': {'next_hop_host_name': 'mumble-06', 'next_hop_port_number': '5000', 'delay_in_milliseconds': '0', 'loss_probability_percentage': '0'
+                }
+            }
+        }
+    }
+}

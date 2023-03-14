@@ -1,0 +1,11 @@
+work done:
+
+in sender.py:
+- modified parse_command_line_args()
+
+in requester.py:
+- modified parse_command_line_args()
+
+
+clarification questions:
+- outer packet length (is it in bytes) ?
