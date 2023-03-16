@@ -1,5 +1,7 @@
 import argparse
 from enum import Enum
+from locale import atoi
+import logging
 from queue import PriorityQueue
 import select
 import socket
@@ -13,9 +15,9 @@ class Packet_Type(Enum):
     ACK = 'A'
 
 # init the three priority queues
-highest_priority_queue = PriorityQueue()
-medium_priority_queue = PriorityQueue()
-lowest_priority_queue = PriorityQueue()
+highest_priority_queue = []
+medium_priority_queue = []
+lowest_priority_queue = []
 
 def parse_command_line_args():
     parser = argparse.ArgumentParser()
@@ -103,15 +105,30 @@ def send_packet(sender_host_name, sender_port_number, priority, src_ip_address, 
     # add encapsulation header
 
     # convert 
-    a, b, c, d = map(atoi, src_ip_address.split('.'))
-    encapsulation_header = struct.pack('!BBBBBhBBBBhI', priority, a, b, c, d, src_port, a, b, c, d, dest_port, length)
+    source_ip_a, source_ip_b, source_ip_c, source_ip_d = map(atoi, src_ip_address.split('.'))
+    dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d = map(atoi, dest_ip_address.split('.'))
+
+    encapsulation_header = struct.pack('!BBBBBhBBBBhI', 
+        priority, 
+        source_ip_a, source_ip_b, source_ip_c, source_ip_d, 
+        src_port, 
+        dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d, 
+        dest_port, 
+        length)
 
     packet_with_header = encapsulation_header + packet_with_header
     
     sock.sendto(packet_with_header, (sender_host_name, sender_port_number))
     
-# insert (priority, object) pairs into priority queues, with priority in each queue begininng at 1
-def queue_packet(packet_with_header):
+def queue_packet(packet, priority, queue_max_size):
+    if priority == 1 and len(highest_priority_queue) < queue_max_size:
+        highest_priority_queue.append(packet)
+    elif priority == 2 and len(medium_priority_queue) < queue_max_size:
+        medium_priority_queue.append(packet)
+    elif priority == 3 and len(lowest_priority_queue) < queue_max_size:
+        lowest_priority_queue.append(packet)
+    else:
+        logging.warning('packet dropped; queue is full')
     return
 
 # parse command line args
@@ -133,14 +150,46 @@ print(forwarding_table_info)
 
 while True:
     try:
+        # step 1) receive packet in a non-blocking way
         message, sender_address = sock.recvfrom(8192) # Buffer size is 8192. Change as needed
         if message:
-
             encapsulation_header = struct.unpack('!BBBBBhBBBBhI', message[:17]) # first unpack and get encapsulation header
+            print(encapsulation_header)
+            priority = encapsulation_header[0]
+            print('priority: ', priority)
+
+            src_ip_address = '.'.join(str(addr) for addr in encapsulation_header[1:5])
+            print('src ip: ', src_ip_address)
+
+            src_port = encapsulation_header[5]
+            print('src port: ', src_port)
+
+            dest_ip_address = '.'.join(str(addr) for addr in encapsulation_header[6:10])
+            print('dest ip: ', dest_ip_address)
+
+            dest_port = encapsulation_header[10]
+            print('dest port: ', dest_port)
+
+            length = encapsulation_header[11]
+            print('length: ', length)
+
             inner_header_and_payload = message[17:] # get the rest of the message excluding the encapsulation header
 
             inner_header = struct.unpack("!cII", inner_header_and_payload[:9]) # unpack the inner header
             data = inner_header_and_payload[9:] # get the actual payload excluding the inner header
             print(data.decode("utf-8")) # print decoded data
+
+            # step 2) decide if this packet is to be forwarded by consulting the forwarding table
+            try:
+                dict = forwarding_table_info[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]
+
+                # step 3) queue packet
+                print('queueing packet')
+                queue_packet(message)
+            except KeyError:
+                logging.warning('this packet dest does not exist in the forwarding table so it will be dropped')
+                print('dest address does not exist in forwarding table. dropping packet.')
+                pass
+
     except:
         pass
