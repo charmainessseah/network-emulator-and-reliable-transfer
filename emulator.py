@@ -2,11 +2,10 @@ import argparse
 from enum import Enum
 from locale import atoi
 import logging
-from queue import PriorityQueue
-import select
+import random
 import socket
 import struct
-import sys
+import time
 
 class Packet_Type(Enum):
     REQUEST = 'R'
@@ -131,6 +130,59 @@ def queue_packet(packet, priority, queue_max_size):
         logging.warning('packet dropped; queue is full')
     return
 
+def randomly_drop_packet():
+    return random.choice([True, False])
+
+def epoch_time_in_milliseconds_now():
+    time_now_in_milliseconds = round(time.time() * 1000)
+    print("Milliseconds since epoch:", time_now_in_milliseconds)
+    return time_now_in_milliseconds
+
+# returns a tuple (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data)
+def parse_packet():
+    encapsulation_header = struct.unpack('!BBBBBhBBBBhI', message[:17]) # first unpack and get encapsulation header
+    print(encapsulation_header)
+    priority = encapsulation_header[0]
+    print('priority: ', priority)
+
+    src_ip_address = '.'.join(str(addr) for addr in encapsulation_header[1:5])
+    print('src ip: ', src_ip_address)
+    src_port = encapsulation_header[5]
+    print('src port: ', src_port)
+
+    dest_ip_address = '.'.join(str(addr) for addr in encapsulation_header[6:10])
+    print('dest ip: ', dest_ip_address)
+
+    dest_port = encapsulation_header[10]
+    print('dest port: ', dest_port)
+
+    length = encapsulation_header[11]
+    print('length: ', length)
+
+    inner_header_and_payload = message[17:] # get the rest of the message excluding the encapsulation heade
+    inner_header = struct.unpack("!cII", inner_header_and_payload[:9]) # unpack the inner header
+    data = inner_header_and_payload[9:] # get the actual payload excluding the inner header
+    print(data.decode("utf-8")) # print decoded data
+
+    return (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data)
+
+def dequeue_and_delay_packet():
+    packet_to_delay = None
+    if len(highest_priority_queue) > 0:
+        packet_to_delay = highest_priority_queue.pop()
+    elif len(medium_priority_queue) > 0:
+        packet_to_delay = medium_priority_queue.pop()
+    elif len(lowest_priority_queue) > 0:
+        packet_to_delay = lowest_priority_queue.pop()
+    else:
+        print('no packets in the queue currently to dequeue')
+
+    return packet_to_delay  
+
+# def is_any_packet_delayed(delay_expiry_time):
+#     time_now = epoch_time_in_milliseconds_now()
+#     return delay_expiry_time > time_now
+
 # parse command line args
 args = parse_command_line_args()
 forwarding_table_filename = args.filename
@@ -148,38 +200,19 @@ sock.setblocking(0) # receive packets in a non-blocking way
 forwarding_table_info = parse_forwarding_table(forwarding_table_filename, emulator_host_name, emulator_port_number)
 print(forwarding_table_info)
 
+is_any_packet_delayed = False
+delay_expiry_time = 0
+delayed_packet = None
+
 while True:
+    # epoch_time_in_milliseconds_now()
     try:
         # step 1) receive packet in a non-blocking way
         message, sender_address = sock.recvfrom(8192) # Buffer size is 8192. Change as needed
         if message:
-            encapsulation_header = struct.unpack('!BBBBBhBBBBhI', message[:17]) # first unpack and get encapsulation header
-            print(encapsulation_header)
-            priority = encapsulation_header[0]
-            print('priority: ', priority)
-
-            src_ip_address = '.'.join(str(addr) for addr in encapsulation_header[1:5])
-            print('src ip: ', src_ip_address)
-
-            src_port = encapsulation_header[5]
-            print('src port: ', src_port)
-
-            dest_ip_address = '.'.join(str(addr) for addr in encapsulation_header[6:10])
-            print('dest ip: ', dest_ip_address)
-
-            dest_port = encapsulation_header[10]
-            print('dest port: ', dest_port)
-
-            length = encapsulation_header[11]
-            print('length: ', length)
-
-            inner_header_and_payload = message[17:] # get the rest of the message excluding the encapsulation header
-
-            inner_header = struct.unpack("!cII", inner_header_and_payload[:9]) # unpack the inner header
-            data = inner_header_and_payload[9:] # get the actual payload excluding the inner header
-            print(data.decode("utf-8")) # print decoded data
-
             # step 2) decide if this packet is to be forwarded by consulting the forwarding table
+            priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data = parse_packet(message)
+
             try:
                 dict = forwarding_table_info[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]
 
@@ -190,6 +223,23 @@ while True:
                 logging.warning('this packet dest does not exist in the forwarding table so it will be dropped')
                 print('dest address does not exist in forwarding table. dropping packet.')
                 pass
-
     except:
         pass
+
+    # step 4) 
+    if is_any_packet_delayed and epoch_time_in_milliseconds_now == delay_expiry_time:
+        if not randomly_drop_packet():
+            print('sending packet')
+            # send_packet()
+        else:
+            logging.warning('randomly dropping packet here')
+        is_any_packet_delayed = False
+        delay_expiry_time = 0
+        delayed_packet = None
+    else:
+        packet_to_delay = dequeue_and_delay_packet()
+        if packet_to_delay is not None:
+            priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data = parse_packet(packet_to_delay)
+            delay_time = forwarding_table_info[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]['delay_in_milliseconds']
+            is_any_packet_delayed = True
+            delay_expiry_time = epoch_time_in_milliseconds_now() + delay_time
