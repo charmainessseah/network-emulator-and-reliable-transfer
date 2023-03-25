@@ -65,7 +65,7 @@ def parse_forwarding_table(file_name, emulator_host_name, emulator_port_number):
         emulator_host_name = words_in_line[0]
         emulator_port_number = int(words_in_line[1])
         dest_host_name = words_in_line[2]
-        dest_port_number = words_in_line[3]
+        dest_port_number = int(words_in_line[3])
 
         if emulator_host_name not in forwarding_table_info:
             forwarding_table_info[emulator_host_name] = {}
@@ -80,15 +80,11 @@ def parse_forwarding_table(file_name, emulator_host_name, emulator_port_number):
             forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number] = {}
 
         forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['next_hop_host_name'] = words_in_line[4]
-        forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['next_hop_port_number'] = words_in_line[5]
-        forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['delay_in_milliseconds'] = words_in_line[6]
-        forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['loss_probability_percentage'] = words_in_line[7]
-
-        # leave this for testing
-        # emulator_host_name = 'mumble-03'
-        # emulator_port_number = 5000
+        forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['next_hop_port_number'] = int(words_in_line[5])
+        forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['delay_in_milliseconds'] = int(words_in_line[6])
+        forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['loss_probability_percentage'] = float(words_in_line[7])
         
-    return forwarding_table_info[emulator_host_name][emulator_port_number]
+    return forwarding_table_info
 
 def send_packet(sender_host_name, sender_port_number, priority, src_ip_address, src_port, dest_ip_address, dest_port, length):
     data = 'hello world'.encode()
@@ -120,6 +116,7 @@ def send_packet(sender_host_name, sender_port_number, priority, src_ip_address, 
     sock.sendto(packet_with_header, (sender_host_name, sender_port_number))
     
 def queue_packet(packet, priority, queue_max_size):
+    print('inside queueing func')
     if priority == 1 and len(highest_priority_queue) < queue_max_size:
         highest_priority_queue.append(packet)
     elif priority == 2 and len(medium_priority_queue) < queue_max_size:
@@ -128,6 +125,7 @@ def queue_packet(packet, priority, queue_max_size):
         lowest_priority_queue.append(packet)
     else:
         logging.warning('packet dropped; queue is full')
+
     return
 
 def randomly_drop_packet():
@@ -135,12 +133,14 @@ def randomly_drop_packet():
 
 def epoch_time_in_milliseconds_now():
     time_now_in_milliseconds = round(time.time() * 1000)
-    print("Milliseconds since epoch:", time_now_in_milliseconds)
+    # print("Milliseconds since epoch:", time_now_in_milliseconds)
     return time_now_in_milliseconds
 
 # returns a tuple (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data)
-def parse_packet():
+def parse_packet(message):
     encapsulation_header = struct.unpack('!BBBBBhBBBBhI', message[:17]) # first unpack and get encapsulation header
+    print('------------------------------------------------')
+    print('INCOMING PACKET DETAILS:')
     print(encapsulation_header)
     priority = encapsulation_header[0]
     print('priority: ', priority)
@@ -158,30 +158,25 @@ def parse_packet():
 
     length = encapsulation_header[11]
     print('length: ', length)
-
+ 
     inner_header_and_payload = message[17:] # get the rest of the message excluding the encapsulation heade
     inner_header = struct.unpack("!cII", inner_header_and_payload[:9]) # unpack the inner header
     data = inner_header_and_payload[9:] # get the actual payload excluding the inner header
-    print(data.decode("utf-8")) # print decoded data
-
+    print('data: ', data.decode("utf-8")) # print decoded data
+    print('------------------------------------------------')
     return (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data)
 
 def dequeue_and_delay_packet():
     packet_to_delay = None
     if len(highest_priority_queue) > 0:
+        print('dequeing from highest priority')
         packet_to_delay = highest_priority_queue.pop()
     elif len(medium_priority_queue) > 0:
         packet_to_delay = medium_priority_queue.pop()
     elif len(lowest_priority_queue) > 0:
         packet_to_delay = lowest_priority_queue.pop()
-    else:
-        print('no packets in the queue currently to dequeue')
 
-    return packet_to_delay  
-
-# def is_any_packet_delayed(delay_expiry_time):
-#     time_now = epoch_time_in_milliseconds_now()
-#     return delay_expiry_time > time_now
+    return packet_to_delay
 
 # parse command line args
 args = parse_command_line_args()
@@ -214,20 +209,23 @@ while True:
             priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data = parse_packet(message)
 
             try:
+                print('emulator host name: ', emulator_host_name, ', emulator port: ', emulator_port_number, ', dest ip', dest_ip_address, ', dest port: ', dest_port)
+
                 dict = forwarding_table_info[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]
 
                 # step 3) queue packet
                 print('queueing packet')
-                queue_packet(message)
+                queue_packet(message, priority, queue_size)
             except KeyError:
-                logging.warning('this packet dest does not exist in the forwarding table so it will be dropped')
-                print('dest address does not exist in forwarding table. dropping packet.')
+                logging.warning('this packet destination does not exist in the forwarding table so it will be dropped')
                 pass
     except:
         pass
 
     # step 4) 
-    if is_any_packet_delayed and epoch_time_in_milliseconds_now == delay_expiry_time:
+    if is_any_packet_delayed and epoch_time_in_milliseconds_now() == delay_expiry_time:
+        print('epoch time now: ', epoch_time_in_milliseconds_now(), ', delay expiry time: ', delay_expiry_time)
+        print('delay has expired, now either send or drop packet')
         if not randomly_drop_packet():
             print('sending packet')
             # send_packet()
@@ -236,10 +234,11 @@ while True:
         is_any_packet_delayed = False
         delay_expiry_time = 0
         delayed_packet = None
-    else:
+    elif not is_any_packet_delayed:
         packet_to_delay = dequeue_and_delay_packet()
         if packet_to_delay is not None:
             priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data = parse_packet(packet_to_delay)
             delay_time = forwarding_table_info[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]['delay_in_milliseconds']
             is_any_packet_delayed = True
             delay_expiry_time = epoch_time_in_milliseconds_now() + delay_time
+            print('setting delay timer now to: ', epoch_time_in_milliseconds_now())

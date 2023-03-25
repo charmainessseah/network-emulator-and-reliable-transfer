@@ -68,4 +68,5 @@ sock.bind((udp_host, 12344))
 size = struct.calcsize('!BBBBBhBBBBhI')
 print(size)
 
+# args: sender_host_name, emulator_port_number, priority, src_ip_address, src_port, dest_ip_address, dest_port, length
 send_packet(udp_host, 12345, 1, '123.45.67.89', 123, '255.45.67.98', 321, 40)
