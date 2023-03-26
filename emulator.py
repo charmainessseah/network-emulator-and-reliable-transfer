@@ -184,14 +184,15 @@ def dequeue_and_delay_packet():
 # ensure to log this into a file
 def log_error_message(packet, error_message):
     priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data = parse_packet(packet, is_incoming_packet=False)
-    logging.warning("-----------------------------------------------------------------------")
-    logging.warning("PACKET DROPPED: " + error_message)
-    logging.warning("source hostname: " + src_ip_address + ", source port: ", str(src_port))
-    logging.warning("dest hostname: " + str(dest_ip_address) + ", dest port: " + str(dest_port))
-    logging.warning("time of loss: " + str(epoch_time_in_milliseconds_now()))
-    logging.warning("packet priority level: " + str(priority))
-    logging.warning("size of payload: " + str(length)) # what length is this referring to?
-    logging.warning("-----------------------------------------------------------------------")
+    logging.basicConfig(filename='warning.log', encoding='utf-8', level=logging.DEBUG)
+    logging.warning(
+        '\n-----------------------------------------------------------------------\nPACKET DROPPED: ' + error_message + 
+        '\nsource hostname: ' + src_ip_address + ', source port: ' + str(src_port) + 
+        '\ndest hostname: ' + str(dest_ip_address) + ', dest port: ' + str(dest_port) + 
+        '\ntime of loss: ' + str(epoch_time_in_milliseconds_now()) + 
+        '\npacket priority level: ' + str(priority) + 
+        '\nsize of payload: ' + str(length) + 
+        '\n-----------------------------------------------------------------------')
     
 # parse command line args
 args = parse_command_line_args()

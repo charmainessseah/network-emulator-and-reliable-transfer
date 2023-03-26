@@ -122,7 +122,7 @@ else:
         send_packet(sliced_data, Packet_Type.DATA.value, sequence_number, requester_host_name, requester_ip_address, requester_port_number)
         remaining_bytes_to_send -= max_size_payload_in_bytes
         starting_index += max_size_payload_in_bytes
-        sequence_number += len(sliced_data)
+        sequence_number += 1 
 
     # send end packet when done with data packets
     time.sleep(sending_interval_in_seconds)
