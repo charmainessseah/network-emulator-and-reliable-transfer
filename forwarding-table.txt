@@ -1,1 +1,2 @@
-Charmaines-MacBook-Pro.local 12345 255.45.67.98 321 next-hop 321 5 5
+Charmaines-MacBook-Pro.local 3000 Charmaines-MacBook-Pro.local 4000 Charmaines-MacBook-Pro.local 4000 0 0
+Charmaines-MacBook-Pro.local 3000 Charmaines-MacBook-Pro.local 5000 Charmaines-MacBook-Pro.local 5000 0 0

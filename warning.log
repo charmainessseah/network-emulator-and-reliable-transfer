@@ -205,3 +205,93 @@ time of loss: 1679933044071
 packet priority level: 1
 size of payload: 10
 -----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: no forwarding entry found
+source hostname: 127.0.0.1, source port: 4000
+dest hostname: 127.0.0.1, dest port: 5000
+time of loss: 1679938576423
+packet priority level: 1
+size of payload: 10
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: no forwarding entry found
+source hostname: 127.0.0.1, source port: 4000
+dest hostname: 127.0.0.1, dest port: 5000
+time of loss: 1679938590044
+packet priority level: 1
+size of payload: 10
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: no forwarding entry found
+source hostname: 127.0.0.1, source port: 4000
+dest hostname: 127.0.0.1, dest port: 5000
+time of loss: 1679938695193
+packet priority level: 1
+size of payload: 10
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 127.0.0.1, source port: 4000
+dest hostname: 127.0.0.1, dest port: 5000
+time of loss: 1679939089952
+packet priority level: 1
+size of payload: 10
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 127.0.0.1, source port: 4000
+dest hostname: 127.0.0.1, dest port: 5000
+time of loss: 1679939143481
+packet priority level: 1
+size of payload: 10
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 127.0.0.1, source port: 4000
+dest hostname: 127.0.0.1, dest port: 5000
+time of loss: 1679939151489
+packet priority level: 1
+size of payload: 10
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 127.0.0.1, source port: 4000
+dest hostname: 127.0.0.1, dest port: 5000
+time of loss: 1679939154416
+packet priority level: 1
+size of payload: 10
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 127.0.0.1, source port: 4000
+dest hostname: 127.0.0.1, dest port: 5000
+time of loss: 1679939156819
+packet priority level: 1
+size of payload: 10
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 127.0.0.1, source port: 4000
+dest hostname: 127.0.0.1, dest port: 5000
+time of loss: 1679939158961
+packet priority level: 1
+size of payload: 10
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 127.0.0.1, source port: 4000
+dest hostname: 127.0.0.1, dest port: 5000
+time of loss: 1679939168795
+packet priority level: 1
+size of payload: 10
+-----------------------------------------------------------------------

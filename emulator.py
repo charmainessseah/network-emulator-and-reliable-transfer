@@ -45,6 +45,7 @@ def parse_forwarding_table(file_name, emulator_host_name, emulator_port_number):
     for i in range(0, len(file_lines)):
         file_lines[i] = file_lines[i].replace('\n', '')
 
+    # hosts names are all in ip format
     # construct a dictionary - format below
     # emulator_host_name: {
     #   emulator_port_number: {
@@ -62,9 +63,9 @@ def parse_forwarding_table(file_name, emulator_host_name, emulator_port_number):
     for i in range(0, len(file_lines)):
         words_in_line = file_lines[i].split()
 
-        emulator_host_name = words_in_line[0]
+        emulator_host_name = socket.gethostbyname(words_in_line[0])
         emulator_port_number = int(words_in_line[1])
-        dest_host_name = words_in_line[2]
+        dest_host_name = socket.gethostbyname(words_in_line[2])
         dest_port_number = int(words_in_line[3])
 
         if emulator_host_name not in forwarding_table_info:
@@ -79,7 +80,7 @@ def parse_forwarding_table(file_name, emulator_host_name, emulator_port_number):
         if dest_port_number not in forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name]:
             forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number] = {}
 
-        forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['next_hop_host_name'] = words_in_line[4]
+        forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['next_hop_host_name'] = socket.gethostbyname(words_in_line[4])
         forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['next_hop_port_number'] = int(words_in_line[5])
         forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['delay_in_milliseconds'] = int(words_in_line[6])
         forwarding_table_info[emulator_host_name][emulator_port_number][dest_host_name][dest_port_number]['packet_loss_percentage'] = float(words_in_line[7])
@@ -114,8 +115,7 @@ def queue_packet(packet, priority, queue_max_size, packet_type, forwarding_table
     return
 
 def randomly_drop_packet(loss_percentage):
-    no_drop_percentage = 100 - loss_percentage
-    return random.randrange(100) < no_drop_percentage
+    return random.randrange(100) < loss_percentage
 
 def epoch_time_in_milliseconds_now():
     time_now_in_milliseconds = round(time.time() * 1000)
@@ -140,7 +140,7 @@ def parse_packet(packet, is_incoming_packet=True):
     packet_type = inner_header[0].decode('ascii')
     sequence_number = inner_header[1]
     inner_header_length = inner_header[2] # this is the window size for request packets
-    data = inner_header_and_payload[9:] # get the actual payload excluding the inner header
+    data = inner_header_and_payload[9:].decode('utf-8') # get the actual payload excluding the inner header
     
     if is_incoming_packet:
         print('------------------------------------------------')
@@ -154,7 +154,7 @@ def parse_packet(packet, is_incoming_packet=True):
         print('packet type: ', packet_type)
         print('seq number: ', sequence_number)
         print('window size for request packet/ payload in bytes for data packet: ', inner_header_length)
-        print('data: ', data.decode("utf-8")) # print decoded data
+        print('data: ', data) # print decoded data
         print('------------------------------------------------')
 
     return (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type)
@@ -192,7 +192,7 @@ queue_size = args.queue_size
 
 # create socket object and bind to host and port
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-emulator_host_name = socket.gethostname()
+emulator_host_name = socket.gethostbyname(socket.gethostname())
 print(emulator_host_name)
 sock.bind((emulator_host_name, emulator_port_number))
 sock.setblocking(0) # receive packets in a non-blocking way
@@ -221,6 +221,7 @@ while True:
                 print('queueing packet')
                 queue_packet(packet, priority, queue_size, packet_type, forwarding_table_info)
             except KeyError:
+                print('no forwarding entry found')
                 log_error_message(packet, 'no forwarding entry found')
                 pass
     except:

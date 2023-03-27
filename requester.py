@@ -186,7 +186,7 @@ def parse_packet(packet):
     packet_type = inner_header[0].decode('ascii')
     sequence_number = inner_header[1]
     inner_header_length = inner_header[2]
-    data = inner_header_and_payload[9:] # get the actual payload excluding the inner header
+    data = inner_header_and_payload[9:].decode('utf-8') # get the actual payload excluding the inner header
     
     # if is_incoming_packet:
     #     print('------------------------------------------------')
@@ -274,7 +274,9 @@ end_packets_received = 0
 # { sequence_number: data_packet }
 data_packets_received = {}
 
+counter = 1
 while end_packets_received != number_of_chunks_to_request:
+    print('inside loop counter: ', counter)
     packet, sender_address = sock.recvfrom(1024)
     sender_full_address = str(sender_address[0]) + ':' + str(sender_address[1])
     sender_ip_address = sender_address[0]
@@ -326,8 +328,13 @@ while end_packets_received != number_of_chunks_to_request:
 
 # results_file.close()
 
+print(data_packets_received)
+
+print('gonna start writing results to file')
 # write to file according to sequence number
 results_file = open('result.txt', 'a')
 for sequence_number in sorted(data_packets_received.keys()):
     file_data = data_packets_received[sequence_number]
     results_file.write(file_data)
+
+print('finished writing result to file')

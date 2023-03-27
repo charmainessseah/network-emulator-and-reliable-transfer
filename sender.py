@@ -77,6 +77,7 @@ def read_file(file_name):
 #     print_packet_information(requester_ip_address, requester_port_number, requester_host_name, sequence_number, data, packet_type)
 def send_packet(emulator_host_name, emulator_port_number, priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type, sequence_number):
     data = data.encode()
+    packet_type = packet_type.encode('ascii')
 
     # assemble udp header
     data_length = 0
@@ -125,7 +126,7 @@ def parse_packet(packet, is_incoming_packet=True):
     packet_type = inner_header[0].decode('ascii')
     sequence_number = inner_header[1]
     window_size = inner_header[2]
-    data = inner_header_and_payload[9:] # get the actual payload excluding the inner header
+    data = inner_header_and_payload[9:].decode("utf-8") # get the actual payload excluding the inner header
     
     if is_incoming_packet:
         print('------------------------------------------------')
@@ -139,7 +140,7 @@ def parse_packet(packet, is_incoming_packet=True):
         print('packet type: ', packet_type)
         print('seq number: ', sequence_number)
         print('window size: ', window_size)
-        print('data: ', data.decode("utf-8")) # print decoded data
+        print('data: ', data) # print decoded data
         print('------------------------------------------------')
 
     return (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, window_size, data)
@@ -258,7 +259,7 @@ else:
             sliced_data = data[starting_index:starting_index + max_size_payload_in_bytes]
 
             time.sleep(sending_interval_in_seconds)
-            sent_packet =  send_packet(emulator_host_name, emulator_port, sender_priority, src_ip_address, src_port, src_ip_address, src_port, length, sliced_data, Packet_Type.END.value, sequence_number)
+            sent_packet =  send_packet(emulator_host_name, emulator_port, sender_priority, src_ip_address, src_port, src_ip_address, src_port, length, sliced_data, Packet_Type.DATA.value, sequence_number)
 
             num_packets_sent += 1
             remaining_bytes_to_send -= max_size_payload_in_bytes
@@ -268,17 +269,20 @@ else:
             curr_window_packets_info[sequence_number]['packet'] = sent_packet
 
         # 4) wait for acks - retransmit packets if ack not received
-        while True:
-            packet, sender_address = sock.recvfrom(8192) # Buffer size is 8192. Change as needed
-            if packet:
-                priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, window_size, file_name = parse_packet(packet)
-                curr_window_packets_info[sequence_number]['received_ack'] = True
+        try:
+            while True:
+                packet, sender_address = sock.recvfrom(8192) # Buffer size is 8192. Change as needed
+                if packet:
+                    priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, window_size, file_name = parse_packet(packet)
+                    curr_window_packets_info[sequence_number]['received_ack'] = True
 
-            # if all acks received or all packets not yet received have reached timeout and max number of transmissions
-            if all_acks_received(curr_window_packets_info) or reached_max_transmissions(curr_window_packets_info):
-                break
-            else:
-                retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, emulator_port)
+                # if all acks received or all packets not yet received have reached timeout and max number of transmissions
+                if all_acks_received(curr_window_packets_info) or reached_max_transmissions(curr_window_packets_info):
+                    break
+                else:
+                    retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, emulator_port)
+        except:
+            pass
 
     # 5) send end packet when done with data packets
     time.sleep(sending_interval_in_seconds)
