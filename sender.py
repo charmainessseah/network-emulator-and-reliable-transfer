@@ -75,6 +75,11 @@ def send_packet(data, packet_type, sequence_number, requester_host_name, request
     sock.sendto(packet_with_header, (requester_host_name, requester_port_number))
     print_packet_information(requester_ip_address, requester_port_number, requester_host_name, sequence_number, data, packet_type)
 
+def epoch_time_in_milliseconds_now():
+    time_now_in_milliseconds = round(time.time() * 1000)
+    # print("Milliseconds since epoch:", time_now_in_milliseconds)
+    return time_now_in_milliseconds
+
 # set command line args as global variables
 args = parse_command_line_args()
 requester_port_number = args.requester_port # for testing it is 12345
@@ -82,6 +87,7 @@ sender_port_number = args.sender_port # for testing it is 12344
 sequence_number = args.seq_no
 rate = args.rate
 max_size_payload_in_bytes = args.length
+timeout = args.timeout
 
 # create socket object
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -119,7 +125,26 @@ else:
     while remaining_bytes_to_send > 0:
         sliced_data = data[starting_index:starting_index + max_size_payload_in_bytes]
         time.sleep(sending_interval_in_seconds)
-        send_packet(sliced_data, Packet_Type.DATA.value, sequence_number, requester_host_name, requester_ip_address, requester_port_number)
+
+        sending_retry_count = 0
+        received_ack = False
+        while not received_ack and sending_retry_count <= 5:
+            send_packet(sliced_data, Packet_Type.DATA.value, sequence_number, requester_host_name, requester_ip_address, requester_port_number)
+
+            time_sent = epoch_time_in_milliseconds_now()
+            timeout_expires = time_sent + timeout
+
+            try:
+                sock.settimeout(5.0)
+                packet_with_header, sender_address = sock.recvfrom(1024)
+                sock.settimeout(None)
+
+                received_ack = True
+            except socket.timeout:
+                pass
+            
+            sending_retry_count += 1
+
         remaining_bytes_to_send -= max_size_payload_in_bytes
         starting_index += max_size_payload_in_bytes
         sequence_number += 1 

@@ -86,36 +86,16 @@ def parse_forwarding_table(file_name, emulator_host_name, emulator_port_number):
         
     return forwarding_table_info
 
-def send_packet(sender_host_name, sender_port_number, priority, src_ip_address, src_port, dest_ip_address, dest_port, length):
-    data = 'hello world'.encode()
-
-    # assemble udp header
-    packet_type = (Packet_Type.REQUEST.value).encode('ascii')
-    sequence_number = 0
-    data_length = 0
-    header = struct.pack('!cII', packet_type, sequence_number, data_length)
-
-    packet_with_header = header + data
-
-    # add encapsulation header
-
-    # convert 
-    source_ip_a, source_ip_b, source_ip_c, source_ip_d = map(atoi, src_ip_address.split('.'))
-    dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d = map(atoi, dest_ip_address.split('.'))
-
-    encapsulation_header = struct.pack('!BBBBBhBBBBhI', 
-        priority, 
-        source_ip_a, source_ip_b, source_ip_c, source_ip_d, 
-        src_port, 
-        dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d, 
-        dest_port, 
-        length)
-
-    packet_with_header = encapsulation_header + packet_with_header
+def send_packet(packet, forwarding_table):
     
-    sock.sendto(packet_with_header, (sender_host_name, sender_port_number))
+    priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type = parse_packet(packet, is_incoming_packet=False)
+
+    next_hop_host_name = forwarding_table[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]['next_hop_host_name']
+    next_hop_port_number = forwarding_table[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]['next_hop_port_number']
     
-def queue_packet(packet, priority, queue_max_size):
+    sock.sendto(packet, (next_hop_host_name, next_hop_port_number))
+    
+def queue_packet(packet, priority, queue_max_size, packet_type, forwarding_table):
     print('inside queueing func')
     if priority == 1 and len(highest_priority_queue) < queue_max_size:
         highest_priority_queue.append(packet)
@@ -123,6 +103,10 @@ def queue_packet(packet, priority, queue_max_size):
         medium_priority_queue.append(packet)
     elif priority == 3 and len(lowest_priority_queue) < queue_max_size:
         lowest_priority_queue.append(packet)
+    elif packet_type == Packet_Type.END.value:
+        # send END packet right away
+        send_packet(packet, forwarding_table)
+        pass
     else:
         error_message = 'priority queue ' + str(priority) + ' is full'
         log_error_message(packet, error_message)
@@ -139,8 +123,8 @@ def epoch_time_in_milliseconds_now():
     return time_now_in_milliseconds
 
 # returns a tuple (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data)
-def parse_packet(message, is_incoming_packet=True):
-    encapsulation_header = struct.unpack('!BBBBBhBBBBhI', message[:17]) # first unpack and get encapsulation header
+def parse_packet(packet, is_incoming_packet=True):
+    encapsulation_header = struct.unpack('!BBBBBhBBBBhI', packet[:17]) # first unpack and get encapsulation header
 
     # header 
     priority = encapsulation_header[0]
@@ -151,8 +135,9 @@ def parse_packet(message, is_incoming_packet=True):
     length = encapsulation_header[11]
     
     # inner header
-    inner_header_and_payload = message[17:] # get the rest of the message excluding the encapsulation heade
+    inner_header_and_payload = packet[17:] # get the rest of the message excluding the encapsulation heade
     inner_header = struct.unpack("!cII", inner_header_and_payload[:9]) # unpack the inner header
+    packet_type = inner_header[0].decode('ascii')
     data = inner_header_and_payload[9:] # get the actual payload excluding the inner header
     
     if is_incoming_packet:
@@ -167,7 +152,7 @@ def parse_packet(message, is_incoming_packet=True):
         print('data: ', data.decode("utf-8")) # print decoded data
         print('------------------------------------------------')
 
-    return (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data)
+    return (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type)
 
 def dequeue_and_delay_packet():
     packet_to_delay = None
@@ -183,7 +168,7 @@ def dequeue_and_delay_packet():
 
 # ensure to log this into a file
 def log_error_message(packet, error_message):
-    priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data = parse_packet(packet, is_incoming_packet=False)
+    priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type = parse_packet(packet, is_incoming_packet=False)
     logging.basicConfig(filename='warning.log', encoding='utf-8', level=logging.DEBUG)
     logging.warning(
         '\n-----------------------------------------------------------------------\nPACKET DROPPED: ' + error_message + 
@@ -215,14 +200,12 @@ delay_expiry_time = 0
 delayed_packet = None
 
 while True:
-    # epoch_time_in_milliseconds_now()
     try:
         # step 1) receive packet in a non-blocking way
-        message, sender_address = sock.recvfrom(8192) # Buffer size is 8192. Change as needed
-        if message:
+        packet, sender_address = sock.recvfrom(8192) # Buffer size is 8192. Change as needed
+        if packet:
             # step 2) decide if this packet is to be forwarded by consulting the forwarding table
-            print('here')
-            priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data = parse_packet(message)
+            priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type = parse_packet(packet)
 
             try:
                 print('emulator host name: ', emulator_host_name, ', emulator port: ', emulator_port_number, ', dest ip', dest_ip_address, ', dest port: ', dest_port)
@@ -231,10 +214,9 @@ while True:
 
                 # step 3) queue packet
                 print('queueing packet')
-                queue_packet(message, priority, queue_size)
+                queue_packet(packet, priority, queue_size, packet_type, forwarding_table_info)
             except KeyError:
-                print('here 2')
-                log_error_message(message, 'no forwarding entry found')
+                log_error_message(packet, 'no forwarding entry found')
                 pass
     except:
         pass
@@ -246,17 +228,16 @@ while True:
         packet_loss_percentage = forwarding_table_info[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]['packet_loss_percentage'] 
         if not randomly_drop_packet(packet_loss_percentage):
             print('sending packet')
-            # send_packet()
+            send_packet(delayed_packet, forwarding_table_info)
         else:
-            print('here 2')
-            log_error_message(message, 'loss event occurred')
+            print('dropped packet')
+            log_error_message(packet, 'loss event occurred')
         delay_expiry_time = 0
         delayed_packet = None
     elif delayed_packet is None:
         delayed_packet = dequeue_and_delay_packet()
         if delayed_packet is not None:
-            print('here 3')
-            priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data = parse_packet(delayed_packet, is_incoming_packet=False)
+            priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type = parse_packet(delayed_packet, is_incoming_packet=False)
             delay_time = forwarding_table_info[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]['delay_in_milliseconds']
             delay_expiry_time = epoch_time_in_milliseconds_now() + delay_time
             print('setting delay timer now to: ', epoch_time_in_milliseconds_now())

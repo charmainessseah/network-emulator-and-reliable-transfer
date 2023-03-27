@@ -2,6 +2,7 @@ import argparse
 from collections import OrderedDict
 from datetime import datetime
 from enum import Enum
+from locale import atoi
 import socket
 import struct 
 
@@ -94,22 +95,43 @@ def read_and_parse_tracker_file(file_name):
     return tracker_dict
 
 # send request packed with file name to the sender
-def send_request_packet_to_sender(tracker_dict, file_name, id):
+def send_request_packet_to_sender(tracker_dict, file_name, id, emulator_host_name, emulator_port, window_size, source_host_name, source_port):
     data = file_name.encode()
     file_id_dict = tracker_dict[file_name]
     
     sender_host_name = file_id_dict[id]['sender_host_name']
     sender_port_number = file_id_dict[id]['sender_port_number']
 
+    source_ip_address = socket.gethostbyname(source_host_name)
+    dest_ip_address = socket.gethostbyname(sender_host_name)
+    dest_port = sender_port_number # the final dest of this packet is the targeted sender
+
     # assemble udp header
     packet_type = (Packet_Type.REQUEST.value).encode('ascii')
     sequence_number = 0
-    data_length = 0
-    header = struct.pack('!cII', packet_type, sequence_number, data_length)
+    header = struct.pack('!cII', packet_type, sequence_number, window_size)
 
     packet_with_header = header + data
 
-    sock.sendto(packet_with_header, (sender_host_name, sender_port_number))
+    # add encapsulation header
+
+    # convert 
+    source_ip_a, source_ip_b, source_ip_c, source_ip_d = map(atoi, source_ip_address.split('.'))
+    dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d = map(atoi, dest_ip_address.split('.'))
+    priority = 1 # all request packets have priority 1
+
+    encapsulation_header = struct.pack('!BBBBBhBBBBhI', 
+        priority, 
+        source_ip_a, source_ip_b, source_ip_c, source_ip_d, 
+        source_port, 
+        dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d, 
+        dest_port, 
+        window_size)
+
+    packet_with_header = encapsulation_header + packet_with_header
+
+    sock.sendto(packet_with_header, (emulator_host_name, emulator_port))
+
 
 # file_storage_dict = {
 #   sender_full_address: ''
@@ -129,6 +151,7 @@ def create_file_data_storage_dict(file_id_dict):
     return file_storage_dict
 
 # pass in file_data_storage_dict to have easy access to all sender's full address
+# sender's full address: "host_name:port_number"
 # create a dict to store a sender's stats
 # sender_stats = {
 #       sender_full_address = {
@@ -146,11 +169,17 @@ def create_sender_stats_dict(file_data_storage_dict):
     
     return sender_stats
 
+def send_ack_receipt():
+    pass
+
 # set global variables from command line args
 args = parse_command_line_args()
 requester_port = args.requester_port
 requested_file_name = args.file_name
-tracker_dict = read_and_parse_tracker_file('tracker.txt') 
+tracker_dict = read_and_parse_tracker_file('tracker.txt')
+window_size = args.window
+emulator_host_name = args.f_hostname
+emulator_port = args.f_port
 
 # create socket object
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -169,14 +198,20 @@ start_time = datetime.now()
 
 file_data_storage_dict = create_file_data_storage_dict(file_id_dict)
 
+# 1) send out request packets to the respective senders (given in tracker.txt) through the emulator
+
+# args: (tracker_dict, file_name, id, emulator_host_name, emulator_port, window_size, source_host_name, source_port)
 for id in range(0, number_of_chunks_to_request):
-    send_request_packet_to_sender(tracker_dict, requested_file_name, id + 1)
+    send_request_packet_to_sender(tracker_dict, requested_file_name, id + 1, emulator_host_name, emulator_port, window_size, requester_host_name, requester_port)
 
 # wait for requested packets from sender while the END packet has not been sent
 
 sender_stats = create_sender_stats_dict(file_data_storage_dict)
 
 end_packets_received = 0
+
+# { sequence_number: data_packet }
+data_packets_received = {}
 
 while end_packets_received != number_of_chunks_to_request:
     packet_with_header, sender_address = sock.recvfrom(1024)
