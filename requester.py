@@ -169,8 +169,69 @@ def create_sender_stats_dict(file_data_storage_dict):
     
     return sender_stats
 
-def send_ack_receipt():
-    pass
+def parse_packet(packet):
+    encapsulation_header = struct.unpack('!BBBBBhBBBBhI', packet[:17]) # first unpack and get encapsulation header
+
+    # header 
+    priority = encapsulation_header[0]
+    src_ip_address = '.'.join(str(addr) for addr in encapsulation_header[1:5])
+    src_port = encapsulation_header[5]
+    dest_ip_address = '.'.join(str(addr) for addr in encapsulation_header[6:10])
+    dest_port = encapsulation_header[10]
+    length = encapsulation_header[11]
+    
+    # inner header
+    inner_header_and_payload = packet[17:] # get the rest of the message excluding the encapsulation heade
+    inner_header = struct.unpack("!cII", inner_header_and_payload[:9]) # unpack the inner header
+    packet_type = inner_header[0].decode('ascii')
+    sequence_number = inner_header[1]
+    inner_header_length = inner_header[2]
+    data = inner_header_and_payload[9:] # get the actual payload excluding the inner header
+    
+    # if is_incoming_packet:
+    #     print('------------------------------------------------')
+    #     print('INCOMING PACKET DETAILS:')
+    #     print('priority: ', priority)
+    #     print('src ip: ', src_ip_address)
+    #     print('src port: ', src_port)
+    #     print('dest ip: ', dest_ip_address)
+    #     print('dest port: ', dest_port)
+    #     print('length: ', length)
+    #     print('data: ', data.decode("utf-8")) # print decoded data
+    #     # print('seq number: ', sequence_number)
+    #     print('------------------------------------------------')
+
+    return (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, inner_header_length, data)
+
+def send_ack_receipt(emulator_host_name, emulator_port, source_host_name, source_port, sender_host_name, sender_port, sequence_number):
+    source_ip_address = socket.gethostbyname(source_host_name)
+    dest_ip_address = socket.gethostbyname(sender_host_name)
+    dest_port = sender_port_number # the final dest of this packet is the targeted sender
+
+    # assemble inner header
+    packet_type = (Packet_Type.ACK.value).encode('ascii')
+    header = struct.pack('!cII', packet_type, sequence_number, 0)
+
+    packet_with_header = header + ''.encode() # empty data for ack packet
+
+    # add encapsulation header
+
+    # convert 
+    source_ip_a, source_ip_b, source_ip_c, source_ip_d = map(atoi, source_ip_address.split('.'))
+    dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d = map(atoi, dest_ip_address.split('.'))
+    priority = 1 # all request packets have priority 1
+
+    encapsulation_header = struct.pack('!BBBBBhBBBBhI', 
+        priority, 
+        source_ip_a, source_ip_b, source_ip_c, source_ip_d, 
+        source_port, 
+        dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d, 
+        dest_port, 
+        0)
+
+    packet_with_header = encapsulation_header + packet_with_header
+
+    sock.sendto(packet_with_header, (emulator_host_name, emulator_port))
 
 # set global variables from command line args
 args = parse_command_line_args()
@@ -214,36 +275,59 @@ end_packets_received = 0
 data_packets_received = {}
 
 while end_packets_received != number_of_chunks_to_request:
-    packet_with_header, sender_address = sock.recvfrom(1024)
+    packet, sender_address = sock.recvfrom(1024)
     sender_full_address = str(sender_address[0]) + ':' + str(sender_address[1])
     sender_ip_address = sender_address[0]
     sender_port_number = sender_address[1]
     sender_host_name = socket.gethostbyaddr(sender_ip_address)[0].replace('.cs.wisc.edu', '')
     sender_host_name_and_port = sender_host_name + ':' + str(sender_port_number)
 
-    header = struct.unpack("!cII", packet_with_header[:9])
-    data = packet_with_header[9:]
+    priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, inner_header_length, data = parse_packet(packet)
 
-    packet_type = header[0].decode('ascii')
+    if packet_type == 'D':
+        data_packets_received[sequence_number] = data
+        print('received data packet')
+    
+    if packet_type == 'E':
+       end_packets_received += 1
+       print('received end packet') 
 
-    if (packet_type == 'D'):
-        sender_stats[sender_host_name_and_port]['data_packets_received'] += 1
-        payload_length = header[2]
-        sender_stats[sender_host_name_and_port]['data_bytes_received'] += payload_length
+    # lab 1 code 
 
-        file_data_storage_dict[sender_host_name_and_port] += data.decode("utf-8")
+    # packet_with_header, sender_address = sock.recvfrom(1024)
+    # sender_full_address = str(sender_address[0]) + ':' + str(sender_address[1])
+    # sender_ip_address = sender_address[0]
+    # sender_port_number = sender_address[1]
+    # sender_host_name = socket.gethostbyaddr(sender_ip_address)[0].replace('.cs.wisc.edu', '')
+    # sender_host_name_and_port = sender_host_name + ':' + str(sender_port_number)
+
+    # header = struct.unpack("!cII", packet_with_header[:9])
+    # data = packet_with_header[9:]
+
+    # packet_type = header[0].decode('ascii')
+
+    # if (packet_type == 'D'):
+    #     sender_stats[sender_host_name_and_port]['data_packets_received'] += 1
+    #     payload_length = header[2]
+    #     sender_stats[sender_host_name_and_port]['data_bytes_received'] += payload_length
+
+    #     file_data_storage_dict[sender_host_name_and_port] += data.decode("utf-8")
         
-    print_receipt_information(header, data, sender_address)
+    # print_receipt_information(header, data, sender_address)
 
-    if (packet_type == 'E'):
-        end_packets_received += 1
-        end_time = datetime.now()
-        print_summary(sender_stats, sender_full_address, sender_host_name_and_port, start_time, end_time)
+    # if (packet_type == 'E'):
+    #     end_packets_received += 1
+    #     end_time = datetime.now()
+    #     print_summary(sender_stats, sender_full_address, sender_host_name_and_port, start_time, end_time)
 
-results_file = open(requested_file_name, 'a')
-for sender_address, file_data in file_data_storage_dict.items():
+# results_file = open(requested_file_name, 'a')
+# for sender_address, file_data in file_data_storage_dict.items():
+#     results_file.write(file_data)
+
+# results_file.close()
+
+# write to file according to sequence number
+results_file = open('result.txt', 'a')
+for sequence_number in sorted(data_packets_received.keys()):
+    file_data = data_packets_received[sequence_number]
     results_file.write(file_data)
-
-results_file.close()
-
-

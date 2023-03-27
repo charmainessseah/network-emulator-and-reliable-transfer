@@ -1,6 +1,7 @@
 import argparse
 from datetime import datetime
 from enum import Enum
+from locale import atoi
 import math
 import socket
 import struct
@@ -65,46 +66,163 @@ def read_file(file_name):
     except:
         return -1
 
-def send_packet(data, packet_type, sequence_number, requester_host_name, requester_ip_address, requester_port_number):
+# def send_packet(data, packet_type, sequence_number, requester_host_name, requester_ip_address, requester_port_number):
+#     data = data.encode()
+
+#     # assemble udp header
+#     header = struct.pack('!cII', packet_type.encode('ascii'), sequence_number, len(data))
+#     packet_with_header = header + data
+
+#     sock.sendto(packet_with_header, (requester_host_name, requester_port_number))
+#     print_packet_information(requester_ip_address, requester_port_number, requester_host_name, sequence_number, data, packet_type)
+def send_packet(emulator_host_name, emulator_port_number, priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type, sequence_number):
     data = data.encode()
 
     # assemble udp header
-    header = struct.pack('!cII', packet_type.encode('ascii'), sequence_number, len(data))
+    data_length = 0
+    header = struct.pack('!cII', packet_type, sequence_number, data_length)
+
     packet_with_header = header + data
 
-    sock.sendto(packet_with_header, (requester_host_name, requester_port_number))
-    print_packet_information(requester_ip_address, requester_port_number, requester_host_name, sequence_number, data, packet_type)
+    # add encapsulation header
+
+    # convert 
+    source_ip_a, source_ip_b, source_ip_c, source_ip_d = map(atoi, src_ip_address.split('.'))
+    dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d = map(atoi, dest_ip_address.split('.'))
+
+    encapsulation_header = struct.pack('!BBBBBhBBBBhI', 
+        priority, 
+        source_ip_a, source_ip_b, source_ip_c, source_ip_d, 
+        src_port, 
+        dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d, 
+        dest_port, 
+        length)
+
+    packet_with_header = encapsulation_header + packet_with_header
+    sock.sendto(packet_with_header, (emulator_host_name, emulator_port_number))
+
+    return packet_with_header
 
 def epoch_time_in_milliseconds_now():
     time_now_in_milliseconds = round(time.time() * 1000)
     # print("Milliseconds since epoch:", time_now_in_milliseconds)
     return time_now_in_milliseconds
 
+def parse_packet(packet, is_incoming_packet=True):
+    encapsulation_header = struct.unpack('!BBBBBhBBBBhI', packet[:17]) # first unpack and get encapsulation header
+
+    # header 
+    priority = encapsulation_header[0]
+    src_ip_address = '.'.join(str(addr) for addr in encapsulation_header[1:5])
+    src_port = encapsulation_header[5]
+    dest_ip_address = '.'.join(str(addr) for addr in encapsulation_header[6:10])
+    dest_port = encapsulation_header[10]
+    length = encapsulation_header[11]
+    
+    # inner header
+    inner_header_and_payload = packet[17:] # get the rest of the message excluding the encapsulation heade
+    inner_header = struct.unpack("!cII", inner_header_and_payload[:9]) # unpack the inner header
+    packet_type = inner_header[0].decode('ascii')
+    sequence_number = inner_header[1]
+    window_size = inner_header[2]
+    data = inner_header_and_payload[9:] # get the actual payload excluding the inner header
+    
+    if is_incoming_packet:
+        print('------------------------------------------------')
+        print('INCOMING PACKET DETAILS:')
+        print('priority: ', priority)
+        print('src ip: ', src_ip_address)
+        print('src port: ', src_port)
+        print('dest ip: ', dest_ip_address)
+        print('dest port: ', dest_port)
+        print('length: ', length)
+        print('packet type: ', packet_type)
+        print('seq number: ', sequence_number)
+        print('window size: ', window_size)
+        print('data: ', data.decode("utf-8")) # print decoded data
+        print('------------------------------------------------')
+
+    return (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, window_size, data)
+
+def create_curr_window_packets_info(starting_sequence_number, window_size, timeout):
+    curr_window_packets_info = {}
+    for sequence_number in range(starting_sequence_number, starting_sequence_number + window_size):
+        curr_window_packets_info[sequence_number] = {}
+        curr_window_packets_info[sequence_number]['packet'] = None
+        curr_window_packets_info[sequence_number]['received_ack'] = False
+        curr_window_packets_info[sequence_number]['number_of_retransmissions'] = 0
+        curr_window_packets_info[sequence_number]['deadline'] = epoch_time_in_milliseconds_now() + timeout
+        
+    return curr_window_packets_info
+
+def all_acks_received(curr_window_packets_info):
+    for sequence_number, details in curr_window_packets_info.items():
+        received_ack = details['received_ack']
+        number_of_retransmissions = details['number_of_retransmissions']
+        deadline = details['deadline']
+
+        if not received_ack:
+            return False
+    
+    return True
+
+# when the sender has not received an ack for all packets 
+# and has reached timeout on the last transmission and is
+# going to giev up on this window of packets
+def reached_max_transmissions(curr_window_packets_info):
+    max_transmissions_count = 0
+    time_now = epoch_time_in_milliseconds_now()
+
+    for sequence_number, details in curr_window_packets_info.items():
+        received_ack = details['received_ack']
+        number_of_retransmissions = details['number_of_retransmissions']
+        deadline = details['deadline']
+
+        if number_of_retransmissions == 5 and time_now > deadline:
+            max_transmissions_count += 1
+    
+    return max_transmissions_count == len(curr_window_packets_info)
+    
+def retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, emulator_port_number):
+    time_now = epoch_time_in_milliseconds_now()
+
+    for sequence_number, details in curr_window_packets_info.items():
+        received_ack = details['received_ack']
+        number_of_retransmissions = details['number_of_retransmissions']
+        deadline = details['deadline']
+
+        if not received_ack and time_now > timeout:
+            packet = curr_window_packets_info[sequence_number]['packet']
+            sock.sendto(packet, (emulator_host_name, emulator_port_number))
+            curr_window_packets_info[sequence_number]['deadline'] = epoch_time_in_milliseconds_now() + timeout
+            curr_window_packets_info[sequence_number]['number_of_retransmissions'] += 1
+    
+    return True
+
 # set command line args as global variables
 args = parse_command_line_args()
 requester_port_number = args.requester_port # for testing it is 12345
 sender_port_number = args.sender_port # for testing it is 12344
-sequence_number = args.seq_no
+sequence_number = 1
 rate = args.rate
 max_size_payload_in_bytes = args.length
 timeout = args.timeout
+emulator_host_name = args.f_hostname
+emulator_port = args.f_port
+sender_priority = args.priority
 
 # create socket object
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 udp_host = socket.gethostname()
 sock.bind((udp_host, sender_port_number))
 
-# wait for request packet
-# print('waiting for requester to send the filename it wants to retrieve...')
-packet_with_header, sender_address = sock.recvfrom(1024)
-header = struct.unpack("!cII", packet_with_header[:9])
-file_name = packet_with_header[9:]
+# 1) wait for request packet
+print('gonna wait for the req packet now')
+packet, sender_address = sock.recvfrom(1024)
+priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, window_size, file_name = parse_packet(packet)
+print('received the request for file: ', file_name)
 
-# print('received filename from requester: ', file_name.decode('utf-8'))
-
-requester_ip_address = sender_address[0]
-requester_host_name = socket.gethostbyaddr(requester_ip_address)[0]
-
+# 2) read requested file data
 data = read_file(file_name)
 
 # file does not exist
@@ -112,46 +230,59 @@ if data == -1:
     # send END packet
     sequence_number = 0
     length = 0
-    send_packet('', Packet_Type.END.value, sequence_number, requester_host_name, requester_ip_address, requester_port_number)
+    # the source and dest are the same because we are sending this back to the requester
+    send_packet(emulator_host_name, emulator_port, sender_priority, src_ip_address, src_port, src_ip_address, src_port, length, '', Packet_Type.END.value, sequence_number)
 else:     
-    # send data packets here
+    sock.setblocking(0) # receive packets in a non-blocking way
+
     remaining_bytes_to_send = len(data)
     num_packets = math.ceil(remaining_bytes_to_send / max_size_payload_in_bytes)
-    # print('num packets to send: ', num_packets)
-    # print('-----------------------------------------------------------------------------')
     sending_interval_in_seconds = (1000 / rate) / 1000
 
     starting_index = 0
+    curr_window_starting_sequence_number = 1
     while remaining_bytes_to_send > 0:
-        sliced_data = data[starting_index:starting_index + max_size_payload_in_bytes]
-        time.sleep(sending_interval_in_seconds)
 
-        sending_retry_count = 0
-        received_ack = False
-        while not received_ack and sending_retry_count <= 5:
-            send_packet(sliced_data, Packet_Type.DATA.value, sequence_number, requester_host_name, requester_ip_address, requester_port_number)
+        # 3) send window of packets
 
-            time_sent = epoch_time_in_milliseconds_now()
-            timeout_expires = time_sent + timeout
+        # sequence_number: {
+        #   packet: packet,
+        #   received_ack: True/ False,
+        #   number_of_retransmissions: 0
+        #   deadline: epoch time in milliseconds
+        # }
+        curr_window_packets_info = create_curr_window_packets_info(curr_window_starting_sequence_number, window_size, timeout)
 
-            try:
-                sock.settimeout(5.0)
-                packet_with_header, sender_address = sock.recvfrom(1024)
-                sock.settimeout(None)
+        num_packets_sent = 0
+        while remaining_bytes_to_send > 0 and num_packets_sent <= window_size:
+            sliced_data = data[starting_index:starting_index + max_size_payload_in_bytes]
 
-                received_ack = True
-            except socket.timeout:
-                pass
-            
-            sending_retry_count += 1
+            time.sleep(sending_interval_in_seconds)
+            sent_packet =  send_packet(emulator_host_name, emulator_port, sender_priority, src_ip_address, src_port, src_ip_address, src_port, length, sliced_data, Packet_Type.END.value, sequence_number)
 
-        remaining_bytes_to_send -= max_size_payload_in_bytes
-        starting_index += max_size_payload_in_bytes
-        sequence_number += 1 
+            num_packets_sent += 1
+            remaining_bytes_to_send -= max_size_payload_in_bytes
+            starting_index += max_size_payload_in_bytes
+            sequence_number += 1
 
-    # send end packet when done with data packets
+            curr_window_packets_info[sequence_number]['packet'] = sent_packet
+
+        # 4) wait for acks - retransmit packets if ack not received
+        while True:
+            packet, sender_address = sock.recvfrom(8192) # Buffer size is 8192. Change as needed
+            if packet:
+                priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, window_size, file_name = parse_packet(packet)
+                curr_window_packets_info[sequence_number]['received_ack'] = True
+
+            # if all acks received or all packets not yet received have reached timeout and max number of transmissions
+            if all_acks_received(curr_window_packets_info) or reached_max_transmissions(curr_window_packets_info):
+                break
+            else:
+                retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, emulator_port)
+
+    # 5) send end packet when done with data packets
     time.sleep(sending_interval_in_seconds)
 
     sequence_number = 0
     length = 0
-    send_packet('', Packet_Type.END.value, sequence_number, requester_host_name, requester_ip_address, requester_port_number)
+    send_packet(emulator_host_name, emulator_port, sender_priority, src_ip_address, src_port, src_ip_address, src_port, length, sliced_data, Packet_Type.END.value, sequence_number)

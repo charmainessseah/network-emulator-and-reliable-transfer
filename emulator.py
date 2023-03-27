@@ -138,6 +138,8 @@ def parse_packet(packet, is_incoming_packet=True):
     inner_header_and_payload = packet[17:] # get the rest of the message excluding the encapsulation heade
     inner_header = struct.unpack("!cII", inner_header_and_payload[:9]) # unpack the inner header
     packet_type = inner_header[0].decode('ascii')
+    sequence_number = inner_header[1]
+    inner_header_length = inner_header[2] # this is the window size for request packets
     data = inner_header_and_payload[9:] # get the actual payload excluding the inner header
     
     if is_incoming_packet:
@@ -149,6 +151,9 @@ def parse_packet(packet, is_incoming_packet=True):
         print('dest ip: ', dest_ip_address)
         print('dest port: ', dest_port)
         print('length: ', length)
+        print('packet type: ', packet_type)
+        print('seq number: ', sequence_number)
+        print('window size for request packet/ payload in bytes for data packet: ', inner_header_length)
         print('data: ', data.decode("utf-8")) # print decoded data
         print('------------------------------------------------')
 
