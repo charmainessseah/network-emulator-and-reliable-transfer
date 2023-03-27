@@ -66,15 +66,6 @@ def read_file(file_name):
     except:
         return -1
 
-# def send_packet(data, packet_type, sequence_number, requester_host_name, requester_ip_address, requester_port_number):
-#     data = data.encode()
-
-#     # assemble udp header
-#     header = struct.pack('!cII', packet_type.encode('ascii'), sequence_number, len(data))
-#     packet_with_header = header + data
-
-#     sock.sendto(packet_with_header, (requester_host_name, requester_port_number))
-#     print_packet_information(requester_ip_address, requester_port_number, requester_host_name, sequence_number, data, packet_type)
 def send_packet(emulator_host_name, emulator_port_number, priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type, sequence_number):
     data = data.encode()
     packet_type = packet_type.encode('ascii')

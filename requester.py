@@ -291,48 +291,15 @@ while end_packets_received != number_of_chunks_to_request:
         print('received data packet')
     
     if packet_type == 'E':
-       end_packets_received += 1
-       print('received end packet') 
-
-    # lab 1 code 
-
-    # packet_with_header, sender_address = sock.recvfrom(1024)
-    # sender_full_address = str(sender_address[0]) + ':' + str(sender_address[1])
-    # sender_ip_address = sender_address[0]
-    # sender_port_number = sender_address[1]
-    # sender_host_name = socket.gethostbyaddr(sender_ip_address)[0].replace('.cs.wisc.edu', '')
-    # sender_host_name_and_port = sender_host_name + ':' + str(sender_port_number)
-
-    # header = struct.unpack("!cII", packet_with_header[:9])
-    # data = packet_with_header[9:]
-
-    # packet_type = header[0].decode('ascii')
-
-    # if (packet_type == 'D'):
-    #     sender_stats[sender_host_name_and_port]['data_packets_received'] += 1
-    #     payload_length = header[2]
-    #     sender_stats[sender_host_name_and_port]['data_bytes_received'] += payload_length
-
-    #     file_data_storage_dict[sender_host_name_and_port] += data.decode("utf-8")
-        
-    # print_receipt_information(header, data, sender_address)
-
-    # if (packet_type == 'E'):
-    #     end_packets_received += 1
-    #     end_time = datetime.now()
-    #     print_summary(sender_stats, sender_full_address, sender_host_name_and_port, start_time, end_time)
-
-# results_file = open(requested_file_name, 'a')
-# for sender_address, file_data in file_data_storage_dict.items():
-#     results_file.write(file_data)
-
-# results_file.close()
+        end_packets_received += 1
+        print('received end packet')
+        break
 
 print(data_packets_received)
-
 print('gonna start writing results to file')
+
 # write to file according to sequence number
-results_file = open('result.txt', 'a')
+results_file = open('result.txt', 'a') # TODO: change this to requested_file_name
 for sequence_number in sorted(data_packets_received.keys()):
     file_data = data_packets_received[sequence_number]
     results_file.write(file_data)
