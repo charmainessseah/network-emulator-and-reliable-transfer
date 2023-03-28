@@ -203,10 +203,9 @@ def parse_packet(packet):
 
     return (priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, inner_header_length, data)
 
-def send_ack_receipt(emulator_host_name, emulator_port, source_host_name, source_port, sender_host_name, sender_port, sequence_number):
+def send_ack_receipt(emulator_host_name, emulator_port, source_host_name, source_port, dest_host_name, dest_port, sequence_number):
     source_ip_address = socket.gethostbyname(source_host_name)
-    dest_ip_address = socket.gethostbyname(sender_host_name)
-    dest_port = sender_port_number # the final dest of this packet is the targeted sender
+    dest_ip_address = socket.gethostbyname(dest_host_name)
 
     # assemble inner header
     packet_type = (Packet_Type.ACK.value).encode('ascii')
@@ -230,7 +229,7 @@ def send_ack_receipt(emulator_host_name, emulator_port, source_host_name, source
         0)
 
     packet_with_header = encapsulation_header + packet_with_header
-
+    print('sending ack packet to port: ', dest_port, ', seq num: ', sequence_number)
     sock.sendto(packet_with_header, (emulator_host_name, emulator_port))
 
 # set global variables from command line args
@@ -274,9 +273,8 @@ end_packets_received = 0
 # { sequence_number: data_packet }
 data_packets_received = {}
 
-counter = 1
-while end_packets_received != number_of_chunks_to_request:
-    print('inside loop counter: ', counter)
+#while end_packets_received != number_of_chunks_to_request:
+while True: 
     packet, sender_address = sock.recvfrom(1024)
     sender_full_address = str(sender_address[0]) + ':' + str(sender_address[1])
     sender_ip_address = sender_address[0]
@@ -288,13 +286,18 @@ while end_packets_received != number_of_chunks_to_request:
 
     if packet_type == 'D':
         data_packets_received[sequence_number] = data
-        print('received data packet')
+        print('received data packet - seq num: ', sequence_number)
+        send_ack_receipt(emulator_host_name, emulator_port, requester_host_name, requester_port, src_ip_address, src_port, sequence_number)
     
-    if packet_type == 'E':
-        end_packets_received += 1
-        print('received end packet')
+    #if packet_type == 'E':
+    #    end_packets_received += 1
+    #    print('received end packet')
+    #    break
+    if len(data_packets_received) == 517:
         break
+    print('curr dict state: ', data_packets_received)
 
+print('broke out of loop bec end packet received or while loop cond fulfilled')
 print(data_packets_received)
 print('gonna start writing results to file')
 
