@@ -194,7 +194,6 @@ def retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, em
 args = parse_command_line_args()
 requester_port_number = args.requester_port # for testing it is 12345
 sender_port_number = args.sender_port # for testing it is 12344
-sequence_number = 1
 rate = args.rate
 max_size_payload_in_bytes = args.length
 timeout = args.timeout
@@ -213,27 +212,32 @@ packet, sender_address = sock.recvfrom(1024)
 priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, window_size, file_name = parse_packet(packet)
 print('received the request for file: ', file_name)
 
+
+sequence_number = 1
+
 # 2) read requested file data
 data = read_file(file_name)
-
+print('read file data')
 # file does not exist
 if data == -1:
+    print('here 1')
     # send END packet
     sequence_number = 0
     length = 0
     # the source and dest are the same because we are sending this back to the requester
     send_packet(emulator_host_name, emulator_port, sender_priority, src_ip_address, src_port, src_ip_address, src_port, length, '', Packet_Type.END.value, sequence_number)
 else:     
+    print('here 2')
     sock.setblocking(0) # receive packets in a non-blocking way
 
     remaining_bytes_to_send = len(data)
     num_packets = math.ceil(remaining_bytes_to_send / max_size_payload_in_bytes)
     sending_interval_in_seconds = (1000 / rate) / 1000
-
+    print('num packets to send: ', num_packets)
     starting_index = 0
     curr_window_starting_sequence_number = 1
     while remaining_bytes_to_send > 0:
-
+        print('inside first loop')
         # 3) send window of packets
 
         # sequence_number: {
@@ -245,18 +249,21 @@ else:
         curr_window_packets_info = create_curr_window_packets_info(curr_window_starting_sequence_number, window_size, timeout)
 
         num_packets_sent = 0
-        while remaining_bytes_to_send > 0 and num_packets_sent <= window_size:
+        while remaining_bytes_to_send > 0 and num_packets_sent < window_size:
             sliced_data = data[starting_index:starting_index + max_size_payload_in_bytes]
-
+            print('inside second loop - curr seq number: ', sequence_number, ', num packets sent: ', num_packets_sent)
             time.sleep(sending_interval_in_seconds)
             sent_packet =  send_packet(emulator_host_name, emulator_port, sender_priority, src_ip_address, src_port, src_ip_address, src_port, length, sliced_data, Packet_Type.DATA.value, sequence_number)
 
             num_packets_sent += 1
             remaining_bytes_to_send -= max_size_payload_in_bytes
             starting_index += max_size_payload_in_bytes
-            sequence_number += 1
-
             curr_window_packets_info[sequence_number]['packet'] = sent_packet
+            print('trying to access seq num: ', sequence_number)
+            sequence_number += 1
+            print(curr_window_packets_info)
+
+        curr_window_starting_sequence_number += window_size
 
         # 4) wait for acks - retransmit packets if ack not received
         try:
