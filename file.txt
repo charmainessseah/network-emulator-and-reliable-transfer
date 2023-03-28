@@ -1,1 +1,7 @@
-Hello world!
+this is line1
+this is line2
+this is line4
+my name is charmaine
+seah
+12345
+abcde

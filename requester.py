@@ -299,7 +299,8 @@ print(data_packets_received)
 print('gonna start writing results to file')
 
 # write to file according to sequence number
-results_file = open('result.txt', 'a') # TODO: change this to requested_file_name
+# results_file = open(requested_file_name, 'a')
+results_file = open('result.txt', 'a')
 for sequence_number in sorted(data_packets_received.keys()):
     file_data = data_packets_received[sequence_number]
     results_file.write(file_data)

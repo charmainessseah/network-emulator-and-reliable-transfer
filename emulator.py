@@ -47,7 +47,7 @@ def parse_forwarding_table(file_name, emulator_host_name, emulator_port_number):
 
     # hosts names are all in ip format
     # construct a dictionary - format below
-    # emulator_host_name: {
+    # emulator_host_name (changed to emulator's ip address/ dot notation): {
     #   emulator_port_number: {
     #!       dest_host_name: {
     #!           dest_port_number: {
@@ -174,7 +174,7 @@ def dequeue_and_delay_packet():
 # ensure to log this into a file
 def log_error_message(packet, error_message):
     priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type = parse_packet(packet, is_incoming_packet=False)
-    logging.basicConfig(filename='warning.log', encoding='utf-8', level=logging.DEBUG)
+    logging.basicConfig(filename=log_file, encoding='utf-8', level=logging.DEBUG)
     logging.warning(
         '\n-----------------------------------------------------------------------\nPACKET DROPPED: ' + error_message + 
         '\nsource hostname: ' + src_ip_address + ', source port: ' + str(src_port) + 
@@ -189,6 +189,7 @@ args = parse_command_line_args()
 forwarding_table_filename = args.filename
 emulator_port_number = args.port
 queue_size = args.queue_size
+log_file = args.log
 
 # create socket object and bind to host and port
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -215,7 +216,7 @@ while True:
             try:
                 print('emulator host name: ', emulator_host_name, ', emulator port: ', emulator_port_number, ', dest ip', dest_ip_address, ', dest port: ', dest_port)
 
-                dict = forwarding_table_info[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]
+                dict = forwarding_table_info[socket.gethostbyname(emulator_host_name)][emulator_port_number][dest_ip_address][dest_port]
 
                 # step 3) queue packet
                 print('queueing packet')

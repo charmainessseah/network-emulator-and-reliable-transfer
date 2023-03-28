@@ -97,7 +97,6 @@ def send_packet(emulator_host_name, emulator_port_number, priority, src_ip_addre
 
 def epoch_time_in_milliseconds_now():
     time_now_in_milliseconds = round(time.time() * 1000)
-    # print("Milliseconds since epoch:", time_now_in_milliseconds)
     return time_now_in_milliseconds
 
 def parse_packet(packet, is_incoming_packet=True):
