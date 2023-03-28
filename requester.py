@@ -289,12 +289,12 @@ while True:
         print('received data packet - seq num: ', sequence_number)
         send_ack_receipt(emulator_host_name, emulator_port, requester_host_name, requester_port, src_ip_address, src_port, sequence_number)
     
-    #if packet_type == 'E':
+    if packet_type == 'E':
     #    end_packets_received += 1
-    #    print('received end packet')
-    #    break
-    if len(data_packets_received) == 517:
+        print('received end packet')
         break
+    #if len(data_packets_received) == 517:
+    #    break
     print('curr dict state: ', data_packets_received)
 
 print('broke out of loop bec end packet received or while loop cond fulfilled')
