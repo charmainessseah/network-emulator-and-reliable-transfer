@@ -137,7 +137,7 @@ def parse_packet(packet, is_incoming_packet=True):
 
 def create_curr_window_packets_info(starting_sequence_number, window_size):
     curr_window_packets_info = {}
-    print('creating new window table for starting sequence number: ', starting_sequence_number)
+    print('creating new window table for starting sequence number: ', starting_sequence_number, ', window size: ', window_size)
     for sequence_number in range(starting_sequence_number, starting_sequence_number + window_size):
         print('curr seq number to create an entry for: ', sequence_number)
         curr_window_packets_info[sequence_number] = {}
@@ -145,7 +145,8 @@ def create_curr_window_packets_info(starting_sequence_number, window_size):
         curr_window_packets_info[sequence_number]['received_ack'] = False
         curr_window_packets_info[sequence_number]['number_of_retransmissions'] = 0
         curr_window_packets_info[sequence_number]['deadline'] = None
-        
+    
+    print('returning newly created window dict: ', curr_window_packets_info)    
     return curr_window_packets_info
 
 def all_acks_received(curr_window_packets_info):
@@ -177,7 +178,6 @@ def reached_max_transmissions(curr_window_packets_info):
         if packet is None:
             continue
         num_packets += 1
-        max_transmissions_count += 1
         received_ack = details['received_ack']
         number_of_retransmissions = details['number_of_retransmissions']
         deadline = details['deadline']
@@ -186,6 +186,7 @@ def reached_max_transmissions(curr_window_packets_info):
             max_transmissions_count += 1
     
     reached_max = max_transmissions_count == num_packets
+    print('num packets in this window: ', num_packets)
     print('reached max transmissions for this window: ', reached_max) 
     return reached_max
     
@@ -202,7 +203,7 @@ def retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, em
         number_of_retransmissions = details['number_of_retransmissions']
         deadline = details['deadline']
 
-        if not received_ack and time_now > timeout:
+        if not received_ack and number_of_retransmissions < 5 and time_now > timeout:
             print('retransmitting seq number: ', sequence_number)
             packet = curr_window_packets_info[sequence_number]['packet']
             sock.sendto(packet, (emulator_host_name, emulator_port_number))
@@ -229,7 +230,7 @@ sock.bind((sender_host_name, sender_port_number))
 # 1) wait for request packet
 print('gonna wait for the req packet now')
 packet, sender_address = sock.recvfrom(1024)
-priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, window_size, file_name = parse_packet(packet)
+priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, packet_window_size, file_name = parse_packet(packet)
 print('received the request for file: ', file_name)
 print('req received from port: ', src_port)
 print('it has a dest of port: ', dest_port)
@@ -237,7 +238,7 @@ requester_ip_address = src_ip_address
 requester_port = src_port
 
 
-sequence_number = 1
+window_sequence_number = 1
 
 # 2) read requested file data
 data = read_file(file_name)
@@ -270,13 +271,13 @@ else:
         #   number_of_retransmissions: 0
         #   deadline: epoch time in milliseconds
         # }
-        curr_window_packets_info = create_curr_window_packets_info(curr_window_starting_sequence_number, window_size)
+        curr_window_packets_info = create_curr_window_packets_info(curr_window_starting_sequence_number, packet_window_size)
 
         num_packets_sent = 0
-        print('remaining bytes to send: ', remaining_bytes_to_send, 'curr seq num: ', sequence_number)
+        print('remaining bytes to send: ', remaining_bytes_to_send, 'curr seq num: ', window_sequence_number)
         print(curr_window_packets_info)
         print('num packets sent: ', num_packets_sent)
-        while remaining_bytes_to_send > 0 and num_packets_sent < window_size:
+        while remaining_bytes_to_send > 0 and num_packets_sent < packet_window_size:
             print('remaining bytes to send: ', remaining_bytes_to_send)
             sliced_data = data[starting_index:starting_index + max_size_payload_in_bytes]
             print('sending a packet - curr seq number: ', sequence_number)
@@ -287,16 +288,18 @@ else:
             print('num packets sent: ', num_packets_sent)
             remaining_bytes_to_send -= max_size_payload_in_bytes
             starting_index += max_size_payload_in_bytes
-            curr_window_packets_info[sequence_number]['packet'] = sent_packet
-            curr_window_packets_info[sequence_number]['deadline'] = epoch_time_in_milliseconds_now() + timeout
-            sequence_number += 1
+            print('trying to store packet for seq num: ', window_sequence_number)
+            curr_window_packets_info[window_sequence_number]['packet'] = sent_packet
+            curr_window_packets_info[window_sequence_number]['deadline'] = epoch_time_in_milliseconds_now() + timeout
+            window_sequence_number += 1
             print(curr_window_packets_info)
 
-        curr_window_starting_sequence_number += window_size
+        curr_window_starting_sequence_number += packet_window_size
         print('finished sending window of packets, gonna wait for acks now')
         while True:
             try:
                 print('waiting for acks')
+                print(curr_window_packets_info)
                 if all_acks_received(curr_window_packets_info):
                     print('all acks have been received: breaking out of waiting for acks loop')
                     break
