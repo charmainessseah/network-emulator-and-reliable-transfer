@@ -97,7 +97,8 @@ def send_packet(packet, forwarding_table):
     sock.sendto(packet, (next_hop_host_name, next_hop_port_number))
     
 def queue_packet(packet, priority, queue_max_size, packet_type, forwarding_table):
-    print('inside queueing func')
+    print('inside queueing func - queue max size is: ', queue_max_size)
+    print('p3 queue curr size: ', len(lowest_priority_queue))
     if priority == 1 and len(highest_priority_queue) < queue_max_size:
         highest_priority_queue.append(packet)
     elif priority == 2 and len(medium_priority_queue) < queue_max_size:
@@ -228,8 +229,8 @@ while True:
     except:
         pass
 
-    # step 4) 
-    if delayed_packet is not None and epoch_time_in_milliseconds_now() == delay_expiry_time:
+    # step 4)
+    if delayed_packet is not None and epoch_time_in_milliseconds_now() >= delay_expiry_time:
         print('epoch time now: ', epoch_time_in_milliseconds_now(), ', delay expiry time: ', delay_expiry_time)
         print('delay has expired, now either send or drop packet')
         packet_loss_percentage = forwarding_table_info[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]['packet_loss_percentage'] 

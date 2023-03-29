@@ -137,16 +137,16 @@ def parse_packet(packet, is_incoming_packet=True):
 
 def create_curr_window_packets_info(starting_sequence_number, window_size):
     curr_window_packets_info = {}
-    print('creating new window table for starting sequence number: ', starting_sequence_number, ', window size: ', window_size)
+    #print('creating new window table for starting sequence number: ', starting_sequence_number, ', window size: ', window_size)
     for sequence_number in range(starting_sequence_number, starting_sequence_number + window_size):
-        print('curr seq number to create an entry for: ', sequence_number)
+     #   print('curr seq number to create an entry for: ', sequence_number)
         curr_window_packets_info[sequence_number] = {}
         curr_window_packets_info[sequence_number]['packet'] = None
         curr_window_packets_info[sequence_number]['received_ack'] = False
         curr_window_packets_info[sequence_number]['number_of_retransmissions'] = 0
         curr_window_packets_info[sequence_number]['deadline'] = None
     
-    print('returning newly created window dict: ', curr_window_packets_info)    
+    #print('returning newly created window dict: ', curr_window_packets_info)    
     return curr_window_packets_info
 
 def all_acks_received(curr_window_packets_info):
@@ -159,10 +159,10 @@ def all_acks_received(curr_window_packets_info):
         deadline = details['deadline']
 
         if not received_ack:
-            print('not all acks received')
+     #       print('not all acks received')
             return False
     
-    print('all acks received')
+    #print('all acks received')
     return True
 
 # when the sender has not received an ack for all packets 
@@ -177,34 +177,35 @@ def reached_max_transmissions(curr_window_packets_info):
         packet = curr_window_packets_info[sequence_number]['packet']
         if packet is None:
             continue
+
         num_packets += 1
         received_ack = details['received_ack']
         number_of_retransmissions = details['number_of_retransmissions']
         deadline = details['deadline']
 
-        if number_of_retransmissions == 5 and time_now > deadline:
+        if (number_of_retransmissions == 5 and time_now > deadline) or received_ack == True:
             max_transmissions_count += 1
     
     reached_max = max_transmissions_count == num_packets
-    print('num packets in this window: ', num_packets)
-    print('reached max transmissions for this window: ', reached_max) 
+   # print('num packets in this window: ', num_packets, ', max transmission count: ', max_transmissions_count)
+   # print('reached max transmissions for this window: ', reached_max) 
     return reached_max
     
 def retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, emulator_port_number):
     time_now = epoch_time_in_milliseconds_now()
-    print('inside retransmit packets')
-    print(curr_window_packets_info)
+  #  print('inside retransmit packets')
+ #   print(curr_window_packets_info)
     for sequence_number, details in curr_window_packets_info.items():
         packet = curr_window_packets_info[sequence_number]['packet']
         if packet is None:
             continue
-        print('checking if we need to retransmit seq number: ', sequence_number)
+   #     print('checking if we need to retransmit seq number: ', sequence_number)
         received_ack = details['received_ack']
         number_of_retransmissions = details['number_of_retransmissions']
         deadline = details['deadline']
 
         if not received_ack and number_of_retransmissions < 5 and time_now > timeout:
-            print('retransmitting seq number: ', sequence_number)
+    #        print('retransmitting seq number: ', sequence_number)
             packet = curr_window_packets_info[sequence_number]['packet']
             sock.sendto(packet, (emulator_host_name, emulator_port_number))
             curr_window_packets_info[sequence_number]['deadline'] = epoch_time_in_milliseconds_now() + timeout
@@ -242,27 +243,27 @@ window_sequence_number = 1
 
 # 2) read requested file data
 data = read_file(file_name)
-print('read file data')
+#print('read file data')
 # file does not exist
 if data == -1:
-    print('here 1')
+    #print('here 1')
     # send END packet
     sequence_number = 0
     length = 0
     # the source and dest are the same because we are sending this back to the requester
     send_packet(emulator_host_name, emulator_port, sender_priority, src_ip_address, src_port, src_ip_address, src_port, length, '', Packet_Type.END.value, sequence_number)
 else:     
-    print('here 2')
+    #print('here 2')
     sock.setblocking(0) # receive packets in a non-blocking way
 
     remaining_bytes_to_send = len(data)
     num_packets = math.ceil(remaining_bytes_to_send / max_size_payload_in_bytes)
     sending_interval_in_seconds = (1000 / rate) / 1000
-    print('num packets to send: ', num_packets)
+    #print('num packets to send: ', num_packets)
     starting_index = 0
     curr_window_starting_sequence_number = 1
     while remaining_bytes_to_send > 0:
-        print('creating new window table, starting seq num: ', curr_window_starting_sequence_number)
+    #    print('creating new window table, starting seq num: ', curr_window_starting_sequence_number)
         # 3) send window of packets
 
         # sequence_number: {
@@ -282,30 +283,30 @@ else:
             sliced_data = data[starting_index:starting_index + max_size_payload_in_bytes]
             print('sending a packet - curr seq number: ', sequence_number)
             time.sleep(sending_interval_in_seconds)
-            sent_packet =  send_packet(emulator_host_name, emulator_port, sender_priority, sender_ip_address, sender_port_number, requester_ip_address, requester_port, length, sliced_data, Packet_Type.DATA.value, sequence_number)
+            sent_packet =  send_packet(emulator_host_name, emulator_port, sender_priority, sender_ip_address, sender_port_number, requester_ip_address, requester_port, length, sliced_data, Packet_Type.DATA.value, window_sequence_number)
 
             num_packets_sent += 1
-            print('num packets sent: ', num_packets_sent)
+  #          print('num packets sent: ', num_packets_sent)
             remaining_bytes_to_send -= max_size_payload_in_bytes
             starting_index += max_size_payload_in_bytes
-            print('trying to store packet for seq num: ', window_sequence_number)
+   #         print('trying to store packet for seq num: ', window_sequence_number)
             curr_window_packets_info[window_sequence_number]['packet'] = sent_packet
             curr_window_packets_info[window_sequence_number]['deadline'] = epoch_time_in_milliseconds_now() + timeout
             window_sequence_number += 1
             print(curr_window_packets_info)
 
         curr_window_starting_sequence_number += packet_window_size
-        print('finished sending window of packets, gonna wait for acks now')
+#        print('finished sending window of packets, gonna wait for acks now')
         while True:
             try:
-                print('waiting for acks')
+ #               print('waiting for acks')
                 print(curr_window_packets_info)
                 if all_acks_received(curr_window_packets_info):
-                    print('all acks have been received: breaking out of waiting for acks loop')
+ #                   print('all acks have been received: breaking out of waiting for acks loop')
                     break
                 
                 if reached_max_transmissions(curr_window_packets_info):
-                    print('reached max transmissions: breaking out of waiting for acks loop')
+ #                   print('reached max transmissions: breaking out of waiting for acks loop')
                     break
                 
                 retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, emulator_port) 
