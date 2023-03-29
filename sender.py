@@ -210,7 +210,7 @@ def retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, em
         number_of_retransmissions = details['number_of_retransmissions']
         deadline = details['deadline']
 
-        if not received_ack and number_of_retransmissions < 5 and time_now > timeout:
+        if not received_ack and number_of_retransmissions < 5 and time_now > deadline:
     #        print('retransmitting seq number: ', sequence_number)
             packet = curr_window_packets_info[sequence_number]['packet']
             sock.sendto(packet, (emulator_host_name, emulator_port_number))
@@ -230,7 +230,7 @@ def observed_percentage_packets_lost():
     print('total number of retransmissions: ', total_number_of_retransmissions)
     
     percentage_loss = (total_number_of_retransmissions/ total_number_of_transmissions) * 100
-    print('observed percentage of packets lost: ', percentage_loss)
+    print('observed percentage of packets lost: ', percentage_loss, '%')
     print('---------------------------------------------------')
 
 # set command line args as global variables
