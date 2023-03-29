@@ -91,6 +91,9 @@ def read_and_parse_tracker_file(file_name):
 
         tracker_dict[curr_file_name][id]['sender_host_name'] = sender_host_name
         tracker_dict[curr_file_name][id]['sender_port_number'] = int(sender_port_number)
+        
+        full_address = socket.gethostbyname(sender_host_name) + ':' + sender_port_number
+        tracker_dict[curr_file_name][id]['full_address'] = full_address
 
     return tracker_dict
 
@@ -255,6 +258,7 @@ if requested_file_name not in tracker_dict:
 file_id_dict = tracker_dict[requested_file_name]
 number_of_chunks_to_request = len(file_id_dict)
 start_time = datetime.now()
+print('file id dict: ', file_id_dict)
 
 file_data_storage_dict = create_file_data_storage_dict(file_id_dict)
 
@@ -270,7 +274,9 @@ sender_stats = create_sender_stats_dict(file_data_storage_dict)
 
 end_packets_received = 0
 
-# { sequence_number: data_packet }
+# sender_host_name_and_port: {
+#    sequence_number: data_packet
+# }
 data_packets_received = {}
 
 #while end_packets_received != number_of_chunks_to_request:
@@ -284,28 +290,41 @@ while True:
 
     priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, inner_header_length, data = parse_packet(packet)
 
+    original_sender_full_address = src_ip_address + ':' + str(src_port)
     if packet_type == 'D':
-        data_packets_received[sequence_number] = data
-        print('received data packet - seq num: ', sequence_number)
+        if original_sender_full_address not in data_packets_received:
+            data_packets_received[original_sender_full_address] = {}
+
+        data_packets_received[original_sender_full_address][sequence_number] = data
+
+        print('received data packet - seq num: ', sequence_number, ', from: ', original_sender_full_address, ', with data: ', data)
         send_ack_receipt(emulator_host_name, emulator_port, requester_host_name, requester_port, src_ip_address, src_port, sequence_number)
     
     if packet_type == 'E':
-    #    end_packets_received += 1
+        end_packets_received += 1
         print('received end packet')
+   #     break
+    if end_packets_received == number_of_chunks_to_request:
+        print('received two end packets. done')
         break
-    #if len(data_packets_received) == 517:
-    #    break
     print('curr dict state: ', data_packets_received)
 
 print('broke out of loop bec end packet received or while loop cond fulfilled')
 print(data_packets_received)
 print('gonna start writing results to file')
 
+print('file id dict: ', file_id_dict)
+print('data packets received dict: ', data_packets_received)
+
 # write to file according to sequence number
 # results_file = open(requested_file_name, 'a')
 results_file = open('result.txt', 'a')
-for sequence_number in sorted(data_packets_received.keys()):
-    file_data = data_packets_received[sequence_number]
-    results_file.write(file_data)
 
+for file_id_sequence in sorted(file_id_dict.keys()):
+    full_address = file_id_dict[file_id_sequence]['full_address']
+    sequence_number_packets_dict = data_packets_received[full_address]
+    for sequence_number in sorted(sequence_number_packets_dict.keys()):
+        file_data = data_packets_received[full_address][sequence_number]
+        results_file.write(file_data)
+    
 print('finished writing result to file')
