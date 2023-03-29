@@ -216,7 +216,9 @@ def retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, em
             sock.sendto(packet, (emulator_host_name, emulator_port_number))
             curr_window_packets_info[sequence_number]['deadline'] = epoch_time_in_milliseconds_now() + timeout
             curr_window_packets_info[sequence_number]['number_of_retransmissions'] += 1
-            
+           
+            global total_number_of_retransmissions
+            global total_number_of_transmissions 
             total_number_of_retransmissions += 1
             total_number_of_transmissions += 1            
 
@@ -226,7 +228,9 @@ def observed_percentage_packets_lost():
     print('---------------------------------------------------')
     print('total number of transmissions: ', total_number_of_transmissions)
     print('total number of retransmissions: ', total_number_of_retransmissions)
-    print('observed percentage of packets lost: ', total_number_of_retransmissions/ total_number_of_transmissions)
+    
+    percentage_loss = (total_number_of_retransmissions/ total_number_of_transmissions) * 100
+    print('observed percentage of packets lost: ', percentage_loss)
     print('---------------------------------------------------')
 
 # set command line args as global variables
@@ -346,6 +350,7 @@ time.sleep(sending_interval_in_seconds)
 
 sequence_number = 0
 length = 0
+total_number_of_transmissions += 1
 send_packet(emulator_host_name, emulator_port, sender_priority, sender_ip_address, sender_port_number, requester_ip_address, requester_port, length, sliced_data, Packet_Type.END.value, sequence_number)
 print('sent to port: ', requester_port)
 print(curr_window_packets_info)
