@@ -7,6 +7,9 @@ import socket
 import struct
 import time
 
+total_number_of_transmissions = 0
+total_number_of_retransmissions = 0
+
 class Packet_Type(Enum):
     REQUEST = 'R'
     DATA = 'D'
@@ -93,6 +96,9 @@ def send_packet(emulator_host_name, emulator_port_number, priority, src_ip_addre
     packet_with_header = encapsulation_header + packet_with_header
     sock.sendto(packet_with_header, (emulator_host_name, emulator_port_number))
 
+    global total_number_of_transmissions
+    total_number_of_transmissions += 1
+    
     return packet_with_header
 
 def epoch_time_in_milliseconds_now():
@@ -210,6 +216,18 @@ def retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, em
             sock.sendto(packet, (emulator_host_name, emulator_port_number))
             curr_window_packets_info[sequence_number]['deadline'] = epoch_time_in_milliseconds_now() + timeout
             curr_window_packets_info[sequence_number]['number_of_retransmissions'] += 1
+            
+            total_number_of_retransmissions += 1
+            total_number_of_transmissions += 1            
+
+def observed_percentage_packets_lost():
+    global total_number_of_transmissions
+    global total_number_of_retransmissions
+    print('---------------------------------------------------')
+    print('total number of transmissions: ', total_number_of_transmissions)
+    print('total number of retransmissions: ', total_number_of_retransmissions)
+    print('observed percentage of packets lost: ', total_number_of_retransmissions/ total_number_of_transmissions)
+    print('---------------------------------------------------')
 
 # set command line args as global variables
 args = parse_command_line_args()
@@ -331,3 +349,5 @@ length = 0
 send_packet(emulator_host_name, emulator_port, sender_priority, sender_ip_address, sender_port_number, requester_ip_address, requester_port, length, sliced_data, Packet_Type.END.value, sequence_number)
 print('sent to port: ', requester_port)
 print(curr_window_packets_info)
+
+observed_percentage_packets_lost()
