@@ -73,12 +73,12 @@ def send_packet(emulator_host_name, emulator_port_number, priority, src_ip_addre
     data = data.encode()
     packet_type = packet_type.encode('ascii')
 
-    # assemble udp header
-    data_length = 0
-    header = struct.pack('!cII', packet_type, sequence_number, data_length)
+    # assemble inner header
+    inner_length = len(data) # number of bytes in payload
+    header = struct.pack('!cII', packet_type, sequence_number, inner_length)
 
     packet_with_header = header + data
-
+    outer_length = len(packet_with_header)
     # add encapsulation header
 
     # convert 
@@ -91,7 +91,7 @@ def send_packet(emulator_host_name, emulator_port_number, priority, src_ip_addre
         src_port, 
         dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d, 
         dest_port, 
-        length)
+        outer_length)
     print('sending packet now, src port: ', src_port, ' , dest port: ', dest_port)
     packet_with_header = encapsulation_header + packet_with_header
     sock.sendto(packet_with_header, (emulator_host_name, emulator_port_number))
@@ -121,7 +121,7 @@ def parse_packet(packet, is_incoming_packet=True):
     inner_header = struct.unpack("!cII", inner_header_and_payload[:9]) # unpack the inner header
     packet_type = inner_header[0].decode('ascii')
     sequence_number = inner_header[1]
-    window_size = inner_header[2]
+    window_size = inner_header[2] # window size if this is a request packet; otherwise this is the payload size
     data = inner_header_and_payload[9:].decode("utf-8") # get the actual payload excluding the inner header
     
     if is_incoming_packet:
@@ -132,10 +132,11 @@ def parse_packet(packet, is_incoming_packet=True):
         print('src port: ', src_port)
         print('dest ip: ', dest_ip_address)
         print('dest port: ', dest_port)
-        print('length: ', length)
+        print('inner packet header + payload size: ', length)
         print('packet type: ', packet_type)
-        print('seq number: ', sequence_number)
-        print('window size: ', window_size)
+        print('sequence number: ', sequence_number)
+        print('window size (Request packet)/ payload size (Data packet): ', window_size)
+        print('data length: ', len(data))
         print('data: ', data) # print decoded data
         print('------------------------------------------------')
 
@@ -222,6 +223,22 @@ def retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, em
             total_number_of_retransmissions += 1
             total_number_of_transmissions += 1            
 
+def identify_and_print_failed_packets(curr_window_packets_info):
+    print('--------------------------------------------------------------------------------')
+    print('did not receive acks on the following sequence numbers and giving up on them:')
+    for sequence_number, details in curr_window_packets_info.items():
+        packet = curr_window_packets_info[sequence_number]['packet']
+        if packet is None:
+            pass
+        
+        received_ack = details['received_ack']
+        number_of_retransmissions = details['number_of_retransmissions']
+        deadline = details['deadline']
+        
+        if not received_ack and number_of_retransmissions >= 5:
+            print(sequence_number)
+
+
 def observed_percentage_packets_lost():
     global total_number_of_transmissions
     global total_number_of_retransmissions
@@ -251,12 +268,9 @@ sender_ip_address = socket.gethostbyname(sender_host_name)
 sock.bind((sender_host_name, sender_port_number))
 
 # 1) wait for request packet
-print('gonna wait for the req packet now')
 packet, sender_address = sock.recvfrom(1024)
 priority, src_ip_address, src_port, dest_ip_address, dest_port, length, packet_type, sequence_number, packet_window_size, file_name = parse_packet(packet)
 print('received the request for file: ', file_name)
-print('req received from port: ', src_port)
-print('it has a dest of port: ', dest_port)
 requester_ip_address = src_ip_address
 requester_port = src_port
 
@@ -299,7 +313,6 @@ else:
         num_packets_sent = 0
         print('remaining bytes to send: ', remaining_bytes_to_send, 'curr seq num: ', window_sequence_number)
         print(curr_window_packets_info)
-        print('num packets sent: ', num_packets_sent)
         while remaining_bytes_to_send > 0 and num_packets_sent < packet_window_size:
             print('remaining bytes to send: ', remaining_bytes_to_send)
             sliced_data = data[starting_index:starting_index + max_size_payload_in_bytes]
@@ -315,19 +328,20 @@ else:
             curr_window_packets_info[window_sequence_number]['packet'] = sent_packet
             curr_window_packets_info[window_sequence_number]['deadline'] = epoch_time_in_milliseconds_now() + timeout
             window_sequence_number += 1
-            print(curr_window_packets_info)
+        #    print(curr_window_packets_info)
 
         curr_window_starting_sequence_number += packet_window_size
 #        print('finished sending window of packets, gonna wait for acks now')
         while True:
             try:
  #               print('waiting for acks')
-                print(curr_window_packets_info)
+               # print(curr_window_packets_info)
                 if all_acks_received(curr_window_packets_info):
  #                   print('all acks have been received: breaking out of waiting for acks loop')
                     break
                 
                 if reached_max_transmissions(curr_window_packets_info):
+                    identify_and_print_failed_packets(curr_window_packets_info)
  #                   print('reached max transmissions: breaking out of waiting for acks loop')
                     break
                 
@@ -341,18 +355,12 @@ else:
             except:
                 pass
 
-        print('moving onto the next window of packets')
-
-print('done and going to send end packet now')
-
 # 5) send end packet when done with data packets
 time.sleep(sending_interval_in_seconds)
 
 sequence_number = 0
 length = 0
 total_number_of_transmissions += 1
-send_packet(emulator_host_name, emulator_port, sender_priority, sender_ip_address, sender_port_number, requester_ip_address, requester_port, length, sliced_data, Packet_Type.END.value, sequence_number)
-print('sent to port: ', requester_port)
-print(curr_window_packets_info)
+send_packet(emulator_host_name, emulator_port, sender_priority, sender_ip_address, sender_port_number, requester_ip_address, requester_port, length, '', Packet_Type.END.value, sequence_number)
 
 observed_percentage_packets_lost()

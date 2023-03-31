@@ -1,0 +1,567 @@
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:20.333
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:20.333
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:20.343
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:20.344
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:20.353
+packet priority level: 1
+size of payload: 18
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:20.354
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:20.365
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:25.335
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:25.335
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:25.357
+packet priority level: 1
+size of payload: 18
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:25.357
+packet priority level: 1
+size of payload: 18
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:25.357
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:25.358
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:25.371
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:30.357
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:30.357
+packet priority level: 1
+size of payload: 18
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:30.358
+packet priority level: 1
+size of payload: 18
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:30.358
+packet priority level: 1
+size of payload: 18
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:30.358
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:30.358
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:30.372
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:35.366
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:35.366
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:35.366
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:35.366
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:35.366
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:35.367
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:35.375
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:40.375
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:40.375
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:40.375
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:40.376
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:40.376
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:40.376
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:40.376
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:45.376
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:45.377
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:45.377
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:45.377
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:45.377
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:45.377
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:05:45.377
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:07:57.453
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:07:57.454
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:07:57.463
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:07:57.464
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:07:57.474
+packet priority level: 1
+size of payload: 18
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:07:57.475
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:07:57.485
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:02.458
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:02.459
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:02.466
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:02.479
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:02.479
+packet priority level: 1
+size of payload: 18
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:02.479
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:02.488
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:07.460
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:07.460
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:07.467
+packet priority level: 3
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:07.492
+packet priority level: 1
+size of payload: 19
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.222, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:07.492
+packet priority level: 3
+size of payload: 15
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:07.492
+packet priority level: 1
+size of payload: 18
+-----------------------------------------------------------------------
+WARNING:root:
+-----------------------------------------------------------------------
+PACKET DROPPED: loss event occurred
+source hostname: 128.105.37.221, source port: 5000
+dest hostname: 128.105.37.221, dest port: 4000
+time of loss: 2023-03-31 06:08:07.492
+packet priority level: 1
+size of payload: 18
+-----------------------------------------------------------------------

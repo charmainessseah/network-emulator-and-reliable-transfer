@@ -234,7 +234,7 @@ def send_ack_receipt(emulator_host_name, emulator_port, source_host_name, source
         outer_length)
 
     packet_with_header = encapsulation_header + packet_with_header
-    print('sending ack packet to port: ', dest_port, ', seq num: ', sequence_number)
+    print('sending ack packet to: ', dest_ip_address, ', port: ', dest_port, ', seq num: ', sequence_number)
     sock.sendto(packet_with_header, (emulator_host_name, emulator_port))
 
 # set global variables from command line args
@@ -260,7 +260,7 @@ if requested_file_name not in tracker_dict:
 file_id_dict = tracker_dict[requested_file_name]
 number_of_chunks_to_request = len(file_id_dict)
 start_time = datetime.now()
-print('file id dict: ', file_id_dict)
+#print('file id dict: ', file_id_dict)
 
 file_data_storage_dict = create_file_data_storage_dict(file_id_dict)
 
@@ -299,24 +299,14 @@ while True:
 
         data_packets_received[original_sender_full_address][sequence_number] = data
 
-        print('received data packet - seq num: ', sequence_number, ', from: ', original_sender_full_address, ', with data: ', data)
         send_ack_receipt(emulator_host_name, emulator_port, requester_host_name, requester_port, src_ip_address, src_port, sequence_number)
     
     if packet_type == 'E':
         end_packets_received += 1
-        print('received end packet')
-   #     break
+    
     if end_packets_received == number_of_chunks_to_request:
-        print('received two end packets. done')
         break
-    print('curr dict state: ', data_packets_received)
-
-print('broke out of loop bec end packet received or while loop cond fulfilled')
-print(data_packets_received)
-print('gonna start writing results to file')
-
-print('file id dict: ', file_id_dict)
-print('data packets received dict: ', data_packets_received)
+    #print('curr dict state: ', data_packets_received)
 
 # write to file according to sequence number
 # results_file = open(requested_file_name, 'a')
@@ -331,4 +321,3 @@ for file_id_sequence in sorted(file_id_dict.keys()):
             results_file.write(file_data)
     except:
         pass
-print('finished writing result to file')
