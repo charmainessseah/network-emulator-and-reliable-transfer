@@ -90,15 +90,14 @@ def parse_forwarding_table(file_name, emulator_host_name, emulator_port_number):
 def send_packet(packet, forwarding_table):
     
     priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type = parse_packet(packet, is_incoming_packet=False)
-
+    print('sending packet type: ', packet_type, ', data: ', data, ', priority: ', priority)
     next_hop_host_name = forwarding_table[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]['next_hop_host_name']
     next_hop_port_number = forwarding_table[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]['next_hop_port_number']
     
     sock.sendto(packet, (next_hop_host_name, next_hop_port_number))
     
 def queue_packet(packet, priority, queue_max_size, packet_type, forwarding_table):
-    print('inside queueing func - queue max size is: ', queue_max_size)
-    print('p3 queue curr size: ', len(lowest_priority_queue))
+    print('curr q size for pq 3: ', len(lowest_priority_queue))
     if priority == 1 and len(highest_priority_queue) < queue_max_size:
         highest_priority_queue.append(packet)
     elif priority == 2 and len(medium_priority_queue) < queue_max_size:
@@ -107,8 +106,8 @@ def queue_packet(packet, priority, queue_max_size, packet_type, forwarding_table
         lowest_priority_queue.append(packet)
     elif packet_type == Packet_Type.END.value:
         # send END packet right away
+        print('sending END right away because queue is full - curr size: ', len(lowest_priority_queue))
         send_packet(packet, forwarding_table)
-        pass
     else:
         error_message = 'priority queue ' + str(priority) + ' is full'
         log_error_message(packet, error_message)
@@ -165,11 +164,11 @@ def dequeue_and_delay_packet():
     packet_to_delay = None
     if len(highest_priority_queue) > 0:
         print('dequeing from highest priority')
-        packet_to_delay = highest_priority_queue.pop()
+        packet_to_delay = highest_priority_queue.pop(0)
     elif len(medium_priority_queue) > 0:
-        packet_to_delay = medium_priority_queue.pop()
+        packet_to_delay = medium_priority_queue.pop(0)
     elif len(lowest_priority_queue) > 0:
-        packet_to_delay = lowest_priority_queue.pop()
+        packet_to_delay = lowest_priority_queue.pop(0)
 
     return packet_to_delay
 
@@ -249,4 +248,4 @@ while True:
             priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type = parse_packet(delayed_packet, is_incoming_packet=False)
             delay_time = forwarding_table_info[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]['delay_in_milliseconds']
             delay_expiry_time = epoch_time_in_milliseconds_now() + delay_time
-            print('setting delay timer now to: ', epoch_time_in_milliseconds_now())
+            print('time now: ', epoch_time_in_milliseconds_now(), ', delay time: ', delay_time, ', setting delay timer now to: ', epoch_time_in_milliseconds_now() + delay_time)

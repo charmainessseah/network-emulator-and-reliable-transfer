@@ -223,6 +223,22 @@ def retransmit_packets(curr_window_packets_info, timeout, emulator_host_name, em
             total_number_of_retransmissions += 1
             total_number_of_transmissions += 1            
 
+def identify_and_print_failed_packets(curr_window_packets_info):
+    print('--------------------------------------------------------------------------------')
+    print('did not receive acks on the following sequence numbers and giving up on them:')
+    for sequence_number, details in curr_window_packets_info.items():
+        packet = curr_window_packets_info[sequence_number]['packet']
+        if packet is None:
+            pass
+        
+        received_ack = details['received_ack']
+        number_of_retransmissions = details['number_of_retransmissions']
+        deadline = details['deadline']
+        
+        if not received_ack and number_of_retransmissions >= 5:
+            print(sequence_number)
+
+
 def observed_percentage_packets_lost():
     global total_number_of_transmissions
     global total_number_of_retransmissions
@@ -329,6 +345,7 @@ else:
                     break
                 
                 if reached_max_transmissions(curr_window_packets_info):
+                    identify_and_print_failed_packets(curr_window_packets_info)
  #                   print('reached max transmissions: breaking out of waiting for acks loop')
                     break
                 
