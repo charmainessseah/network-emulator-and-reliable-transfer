@@ -324,9 +324,11 @@ results_file = open('result.txt', 'a')
 
 for file_id_sequence in sorted(file_id_dict.keys()):
     full_address = file_id_dict[file_id_sequence]['full_address']
-    sequence_number_packets_dict = data_packets_received[full_address]
-    for sequence_number in sorted(sequence_number_packets_dict.keys()):
-        file_data = data_packets_received[full_address][sequence_number]
-        results_file.write(file_data)
-    
+    try:
+        sequence_number_packets_dict = data_packets_received[full_address]
+        for sequence_number in sorted(sequence_number_packets_dict.keys()):
+            file_data = data_packets_received[full_address][sequence_number]
+            results_file.write(file_data)
+    except:
+        pass
 print('finished writing result to file')
