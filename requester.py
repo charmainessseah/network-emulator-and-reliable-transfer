@@ -115,6 +115,7 @@ def send_request_packet_to_sender(tracker_dict, file_name, id, emulator_host_nam
     header = struct.pack('!cII', packet_type, sequence_number, window_size)
 
     packet_with_header = header + data
+    length_of_inner_header_and_payload = len(packet_with_header) 
 
     # add encapsulation header
 
@@ -129,7 +130,7 @@ def send_request_packet_to_sender(tracker_dict, file_name, id, emulator_host_nam
         source_port, 
         dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d, 
         dest_port, 
-        window_size)
+        length_of_inner_header_and_payload)
 
     packet_with_header = encapsulation_header + packet_with_header
 
@@ -215,6 +216,7 @@ def send_ack_receipt(emulator_host_name, emulator_port, source_host_name, source
     header = struct.pack('!cII', packet_type, sequence_number, 0)
 
     packet_with_header = header + ''.encode() # empty data for ack packet
+    outer_length = len(packet_with_header)
 
     # add encapsulation header
 
@@ -229,7 +231,7 @@ def send_ack_receipt(emulator_host_name, emulator_port, source_host_name, source
         source_port, 
         dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d, 
         dest_port, 
-        0)
+        outer_length)
 
     packet_with_header = encapsulation_header + packet_with_header
     print('sending ack packet to port: ', dest_port, ', seq num: ', sequence_number)

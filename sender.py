@@ -73,12 +73,12 @@ def send_packet(emulator_host_name, emulator_port_number, priority, src_ip_addre
     data = data.encode()
     packet_type = packet_type.encode('ascii')
 
-    # assemble udp header
-    data_length = 0
-    header = struct.pack('!cII', packet_type, sequence_number, data_length)
+    # assemble inner header
+    inner_length = len(data) # number of bytes in payload
+    header = struct.pack('!cII', packet_type, sequence_number, inner_length)
 
     packet_with_header = header + data
-
+    outer_length = len(packet_with_header)
     # add encapsulation header
 
     # convert 
@@ -91,7 +91,7 @@ def send_packet(emulator_host_name, emulator_port_number, priority, src_ip_addre
         src_port, 
         dest_ip_a, dest_ip_b, dest_ip_c, dest_ip_d, 
         dest_port, 
-        length)
+        outer_length)
     print('sending packet now, src port: ', src_port, ' , dest port: ', dest_port)
     packet_with_header = encapsulation_header + packet_with_header
     sock.sendto(packet_with_header, (emulator_host_name, emulator_port_number))
@@ -121,7 +121,7 @@ def parse_packet(packet, is_incoming_packet=True):
     inner_header = struct.unpack("!cII", inner_header_and_payload[:9]) # unpack the inner header
     packet_type = inner_header[0].decode('ascii')
     sequence_number = inner_header[1]
-    window_size = inner_header[2]
+    window_size = inner_header[2] # window size if this is a request packet; otherwise this is the payload size
     data = inner_header_and_payload[9:].decode("utf-8") # get the actual payload excluding the inner header
     
     if is_incoming_packet:
@@ -132,10 +132,11 @@ def parse_packet(packet, is_incoming_packet=True):
         print('src port: ', src_port)
         print('dest ip: ', dest_ip_address)
         print('dest port: ', dest_port)
-        print('length: ', length)
+        print('inner packet header + payload size: ', length)
         print('packet type: ', packet_type)
-        print('seq number: ', sequence_number)
-        print('window size: ', window_size)
+        print('sequence number: ', sequence_number)
+        print('window size (Request packet)/ payload size (Data packet): ', window_size)
+        print('data length: ', len(data))
         print('data: ', data) # print decoded data
         print('------------------------------------------------')
 
@@ -351,7 +352,7 @@ time.sleep(sending_interval_in_seconds)
 sequence_number = 0
 length = 0
 total_number_of_transmissions += 1
-send_packet(emulator_host_name, emulator_port, sender_priority, sender_ip_address, sender_port_number, requester_ip_address, requester_port, length, sliced_data, Packet_Type.END.value, sequence_number)
+send_packet(emulator_host_name, emulator_port, sender_priority, sender_ip_address, sender_port_number, requester_ip_address, requester_port, length, '', Packet_Type.END.value, sequence_number)
 print('sent to port: ', requester_port)
 print(curr_window_packets_info)
 

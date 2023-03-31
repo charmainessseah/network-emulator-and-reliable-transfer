@@ -151,10 +151,11 @@ def parse_packet(packet, is_incoming_packet=True):
         print('src port: ', src_port)
         print('dest ip: ', dest_ip_address)
         print('dest port: ', dest_port)
-        print('length: ', length)
+        print('inner header + payload size: ', length)
         print('packet type: ', packet_type)
         print('seq number: ', sequence_number)
         print('window size for request packet/ payload in bytes for data packet: ', inner_header_length)
+        print('data length: ', len(data))
         print('data: ', data) # print decoded data
         print('------------------------------------------------')
 
