@@ -1,4 +1,5 @@
 import argparse
+from datetime import datetime
 from enum import Enum
 from locale import atoi
 import logging
@@ -180,7 +181,7 @@ def log_error_message(packet, error_message):
         '\n-----------------------------------------------------------------------\nPACKET DROPPED: ' + error_message + 
         '\nsource hostname: ' + src_ip_address + ', source port: ' + str(src_port) + 
         '\ndest hostname: ' + str(dest_ip_address) + ', dest port: ' + str(dest_port) + 
-        '\ntime of loss: ' + str(epoch_time_in_milliseconds_now()) + 
+        '\ntime of loss: ' + str(datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]) + 
         '\npacket priority level: ' + str(priority) + 
         '\nsize of payload: ' + str(length) + 
         '\n-----------------------------------------------------------------------')
@@ -231,10 +232,11 @@ while True:
 
     # step 4)
     if delayed_packet is not None and epoch_time_in_milliseconds_now() >= delay_expiry_time:
+        priority, src_ip_address, src_port, dest_ip_address, dest_port, length, data, packet_type = parse_packet(delayed_packet)
         print('epoch time now: ', epoch_time_in_milliseconds_now(), ', delay expiry time: ', delay_expiry_time)
         print('delay has expired, now either send or drop packet')
         packet_loss_percentage = forwarding_table_info[emulator_host_name][emulator_port_number][dest_ip_address][dest_port]['packet_loss_percentage'] 
-        if not randomly_drop_packet(packet_loss_percentage):
+        if packet_type == 'E' or not randomly_drop_packet(packet_loss_percentage):
             print('sending packet')
             send_packet(delayed_packet, forwarding_table_info)
         else:
